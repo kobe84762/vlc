@@ -24,6 +24,9 @@ jobs:
           sudo apt update
           sudo apt install autopoint gcc-mingw-w64-x86-64 gettext g++-mingw-w64-x86-64 mingw-w64-tools yasm
 
+      - name: Copy modified source code to VLC
+        run: cp -R ${{ github.workspace }}/newsrc/* ${{ github.workspace }}/vlc
+
       - name: Compile LibVLC
         run: |
           mkdir vlc-installed
