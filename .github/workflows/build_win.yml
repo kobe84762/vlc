@@ -17,10 +17,11 @@ jobs:
         run: |
           tar -xf vlc-master.tar.gz
           rm -f vlc-master.tar.gz
+          mv vlc-master vlc
           echo "Listing working directory..."
           ls
           echo "Listing vlc..."
-          ls vlc-master
+          ls vlc
 
       - name: Install dependencies
         run: |
