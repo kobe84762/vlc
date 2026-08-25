@@ -17,5 +17,3 @@ jobs:
         run: |
           tar -xf vlc-master.tar.gz --strip-components=1
           rm -f vlc-master.tar.gz
-          echo "Listing working directory..."
-          ls
