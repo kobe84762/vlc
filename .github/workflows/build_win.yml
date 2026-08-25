@@ -15,12 +15,16 @@ jobs:
       - uses: actions/checkout@v7
       - name: Extract VLC
         run: |
-          tar -xf vlc-master.tar.gz --strip-components=1
+          tar -xf vlc-master.tar.gz
           rm -f vlc-master.tar.gz
+          echo "Listing working directory..."
+          ls
+          echo "Listing vlc..."
+          ls vlc-master
 
       - name: Install dependencies
         run: |
-          sudo apt update
+          sudo apt updatee
           sudo apt install autopoint gcc-mingw-w64-x86-64 gettext g++-mingw-w64-x86-64 mingw-w64-tools yasm
 
       - name: Compile LibVLC
