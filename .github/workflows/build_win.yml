@@ -1,0 +1,21 @@
+name: Build VLC Win
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  
+jobs:
+  build:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Extract VLC
+        run: |
+          tar xf vlc-master.tar.gz
+          rm -f vlc-master.tar.gz
+          echo "Listing working directory..."
+          ls
