@@ -1,0 +1,19 @@
+name: Build VLC Win
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  
+jobs:
+  build:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Extract VLC
+        run: |
+          tar -xf vlc-master.tar.gz --strip-components=1
+          rm -f vlc-master.tar.gz
