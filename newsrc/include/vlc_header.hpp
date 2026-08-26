@@ -39,6 +39,7 @@ namespace vlc {
 		}
 
 	private:
+      friend class adaptive::http::LibVLCHTTPSource;
 		Header() = delete;
 		Header(const Header& other) = delete;
 		Header& operator=(const Header& other) = delete;
