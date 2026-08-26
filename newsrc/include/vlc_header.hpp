@@ -23,6 +23,25 @@
 #ifndef VLC_HEADER_H
 #define VLC_HEADER_H 1
 
-//#include <vlc_tick.h>
+namespace vlc {
+
+	class Header final {
+	public:
+		static void insertHeader(const char* name, const char* value) noexcept;
+		static void clearHeaders() noexcept;
+
+	private:
+		Header() = delete;
+		Header(const Header& other) = delete;
+		Header& operator=(const Header& other) = delete;
+		Header(Header&& other) = delete;
+		Header& operator=(Header&& other) = delete;
+
+		void* operator new(size_t);
+		void* operator new(size_t, void*);
+		void* operator new[](size_t);
+		void* operator new[](size_t, void*);
+	};
+}
 
 #endif
