@@ -30,6 +30,8 @@ namespace vlc {
 
 	class Header final {
 	public:
+       friend class adaptive::http::LibVLCHTTPSource;
+
 		static void insertHeader(const std::string& name, const std::string& value) noexcept {
 			headers.emplace(name, value);
 		}
@@ -39,7 +41,6 @@ namespace vlc {
 		}
 
 	private:
-        friend class adaptive::http::LibVLCHTTPSource;
 		Header() = delete;
 		Header(const Header& other) = delete;
 		Header& operator=(const Header& other) = delete;
