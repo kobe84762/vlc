@@ -135,7 +135,7 @@ class adaptive::http::LibVLCHTTPSource : public adaptive::BlockStreamInterface
         {
             //vlc_http_msg_add_header(req, "Accept-Encoding", "deflate, gzip");
             //vlc_http_msg_add_header(req, "Cache-Control", "no-cache");
-            for (const auto& key_val : vlc::Header.headers) {
+            for (const auto& key_val : vlc::Header::headers) {
                 vlc_http_msg_add_header(req, key_val.first.c_str(), key_val.second.c_str());
             }
             return 0;
