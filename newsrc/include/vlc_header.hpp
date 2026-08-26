@@ -26,11 +26,13 @@
 #include <map>
 #include <string>
 
+namespace adaptive { namespace http { class LibVLCHTTPSource; } }
+
 namespace vlc {
 
 	class Header final {
 	public:
-       friend class adaptive::http::LibVLCHTTPSource;
+        friend int adaptive::http::LibVLCHTTPSource::formatRequest(const struct vlc_http_resource *, struct vlc_http_msg *req);
 
 		static void insertHeader(const std::string& name, const std::string& value) noexcept {
 			headers.emplace(name, value);
