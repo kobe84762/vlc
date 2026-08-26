@@ -26,21 +26,11 @@
 #include <map>
 #include <string>
 
-namespace adaptive { namespace http { class LibVLCHTTPSource; } }
-
 namespace vlc {
 
 	class Header final {
 	public:
-        friend int adaptive::http::LibVLCHTTPSource::formatRequest(const struct vlc_http_resource *, struct vlc_http_msg *req);
-
-		static void insertHeader(const std::string& name, const std::string& value) noexcept {
-			headers.emplace(name, value);
-		}
-
-		static void clearHeaders() noexcept {
-			headers.clear();
-		}
+        static inline std::multimap<std::string, std::string> headers = { };
 
 	private:
 		Header() = delete;
@@ -53,8 +43,6 @@ namespace vlc {
 		void* operator new(size_t, void*);
 		void* operator new[](size_t);
 		void* operator new[](size_t, void*);
-
-		static inline std::multimap<std::string, std::string> headers = { };
 	};
 }
 
