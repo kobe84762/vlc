@@ -27,6 +27,14 @@ jobs:
       - name: Copy modified source code to VLC
         run: cp -R ${{ github.workspace }}/newsrc/* ${{ github.workspace }}/vlc
 
+      - name: Add custom files to build systems
+        run: |
+          cd vlc/include
+          for FILE in vlc_header*;
+            do sed -i "/vlc_cxx_helpers.hpp/a \    ../include/$FILE \\\\" ${{ github.workspace }}/vlc/src/Makefile.am;
+            sed -i "/vlc_gcrypt.h/a \        '$FILE'," ${{ github.workspace }}/vlc/include/meson.build;
+          done
+          
       - name: Compile LibVLC
         run: |
           mkdir vlc-installed
