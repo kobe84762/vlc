@@ -33,6 +33,8 @@
 #include <vlc_stream.h>
 #include <vlc_keystore.h>
 #include <vlc_header.hpp>
+#include <fstream>
+#include <iostream>
 
 extern "C"
 {
@@ -133,10 +135,22 @@ class adaptive::http::LibVLCHTTPSource : public adaptive::BlockStreamInterface
         int formatRequest(const struct vlc_http_resource *,
                           struct vlc_http_msg *req)
         {
-            //vlc_http_msg_add_header(req, "Accept-Encoding", "deflate, gzip");
+            vlc_http_msg_add_header(req, "Accept-Encoding", "deflate, gzip");
             //vlc_http_msg_add_header(req, "Cache-Control", "no-cache");
-            for (const auto& key_val : vlc::Header::headers) {
-                vlc_http_msg_add_header(req, key_val.first.c_str(), key_val.second.c_str());
+            std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+            if (logfile.is_open())
+            {
+                logfile << "Headers in variable:" << std::endl;
+                for (const auto& key_val : vlc::Header::headers) {
+                    vlc_http_msg_add_header(req, key_val.first.c_str(), key_val.second.c_str());
+                    logfile << key_val.first.c_str() << ": " << key_val.second.c_str() << std::endl;
+                }
+                logfile << std::endl << std::endl << "Headers stored in struct:" << std::endl;
+                for (const auto& key_val : vlc::Header::headers) {
+                    logfile << key_val.first << ": " << vlc_http_msg_get_header(req, key_val.first.c_str()) << std::endl;
+                }
+                logfile.flush();
+                logfile.close();
             }
             return 0;
         }
