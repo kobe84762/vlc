@@ -46,17 +46,6 @@ vlc_http_res_req(const struct vlc_http_resource *res, void *opaque)
     if (unlikely(req == NULL))
         return NULL;
 
-    /* Content negotiation */
-    //vlc_http_msg_add_header(req, "Accept", "*/*");
-
-    if (res->negotiate)
-    {
-        const char *lang = vlc_gettext("C");
-        if (!strcmp(lang, "C"))
-            lang = "en_US";
-        //vlc_http_msg_add_header(req, "Accept-Language", "%s", lang);
-    }
-
     /* Authentication */
     if (res->username != NULL && res->password != NULL)
         vlc_http_msg_add_creds_basic(req, false, res->username, res->password);
@@ -69,8 +58,6 @@ vlc_http_res_req(const struct vlc_http_resource *res, void *opaque)
         vlc_http_msg_add_header(req, "Referer", "%s", res->referrer);
 
     vlc_http_msg_add_cookies(req, vlc_http_mgr_get_jar(res->manager));
-
-    /* TODO: vlc_http_msg_add_header(req, "TE", "gzip, deflate"); */
 
     if (res->cbs->request_format(res, req, opaque))
     {
