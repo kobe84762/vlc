@@ -30,7 +30,7 @@ namespace vlc {
 
 	class Header final {
 	public:
-        static inline std::multimap<std::string, std::string> headers = { };
+        inline std::multimap<std::string, std::string> headers = { };
 
 	private:
 		Header() = delete;
