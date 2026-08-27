@@ -32,8 +32,7 @@ jobs:
           mkdir vlc-installed
           mkdir build
           cd build
-          CONFIGFLAGS="--enable-merge-ffmpeg LTCFLAGS=-O0 \
-          --disable-sout --disable-lua --disable-vlm --disable-archive --disable-live555 --disable-dc1394 --disable-dv1394 --disable-linsys \
+          CONFIGFLAGS="--disable-sout --disable-lua --disable-vlm --disable-archive --disable-live555 --disable-dc1394 --disable-dv1394 --disable-linsys \
           --disable-dvdread --disable-dvdnav --disable-bluray --disable-opencv --disable-smbclient --disable-dsm --disable-sftp --disable-nfs --disable-smb2 --disable-v4l2 --disable-amf-scaler \
           --disable-amf-enhancer --disable-amf-frc --disable-decklink --disable-vcd --disable-vnc --disable-freerdp --disable-asdcp --disable-dvbpsi --disable-dvbcsa --disable-gme --disable-sid \
           --disable-ogg --disable-shout --disable-matroska --disable-mod --disable-mpc --disable-shine --disable-omxil --disable-rpi-omxil --disable-mad --disable-mpg123 --disable-gst-decode \
