@@ -26,24 +26,6 @@
 #include <map>
 #include <string>
 
-namespace vlc {
-
-	class Header final {
-	public:
-        inline std::multimap<std::string, std::string> headers = { };
-
-	private:
-		Header() = delete;
-		Header(const Header& other) = delete;
-		Header& operator=(const Header& other) = delete;
-		Header(Header&& other) = delete;
-		Header& operator=(Header&& other) = delete;
-
-		void* operator new(size_t);
-		void* operator new(size_t, void*);
-		void* operator new[](size_t);
-		void* operator new[](size_t, void*);
-	};
-}
+inline std::multimap<std::string, std::string> HTTP_Headers = { };
 
 #endif
