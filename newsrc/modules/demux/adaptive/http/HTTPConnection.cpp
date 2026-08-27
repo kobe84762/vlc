@@ -132,8 +132,6 @@ class adaptive::http::LibVLCHTTPSource : public adaptive::BlockStreamInterface
         int formatRequest(const struct vlc_http_resource *,
                           struct vlc_http_msg *req)
         {
-            //vlc_http_msg_add_header(req, "Accept-Encoding", "deflate, gzip");
-            //vlc_http_msg_add_header(req, "Cache-Control", "no-cache");
             return 0;
         }
 
