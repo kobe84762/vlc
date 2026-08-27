@@ -26,6 +26,9 @@
 #include <map>
 #include <string>
 
-inline std::multimap<std::string, std::string> HTTP_Headers = { };
+inline std::multimap<std::string, std::string>& HTTP_Headers() {
+   static std::multimap<std::string, std::string> headers = { };
+   return headers;
+}
 
 #endif
