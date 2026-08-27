@@ -141,12 +141,12 @@ class adaptive::http::LibVLCHTTPSource : public adaptive::BlockStreamInterface
             if (logfile.is_open())
             {
                 logfile << "Headers in variable:" << std::endl;
-                for (const auto& key_val : HTTP_Headers) {
+                for (const auto& key_val : HTTP_Headers()) {
                     vlc_http_msg_add_header(req, key_val.first.c_str(), key_val.second.c_str());
                     logfile << key_val.first.c_str() << ": " << key_val.second.c_str() << std::endl;
                 }
                 logfile << std::endl << std::endl << "Headers stored in struct:" << std::endl;
-                for (const auto& key_val : HTTP_Headers) {
+                for (const auto& key_val : HTTP_Headers()) {
                     logfile << key_val.first << ": " << vlc_http_msg_get_header(req, key_val.first.c_str()) << std::endl;
                 }
                 logfile.flush();
