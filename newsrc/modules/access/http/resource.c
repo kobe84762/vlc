@@ -36,6 +36,32 @@
 #include "connmgr.h"
 #include "resource.h"
 
+static void vlc_http_add_custom_headers(struct vlc_http_msg *req, const char *headers_str)
+{
+    if (!headers_str || !*headers_str)
+        return;
+
+    char *copy = strdup(headers_str);
+    if (!copy)
+        return;
+
+    char *line = strtok(copy, "\n\r");
+    while (line) {
+        char *colon = strchr(line, ':');
+        if (colon) {
+            *colon = '\0';
+            const char *name = line;
+            const char *value = colon + 1;
+            while (*value == ' ' || *value == '\t') value++;
+            if (*name && *value)
+                vlc_http_msg_add_header(req, name, "%s", value);
+        }
+        line = strtok(NULL, "\n\r");
+    }
+
+    free(copy);
+}
+
 static struct vlc_http_msg *
 vlc_http_res_req(const struct vlc_http_resource *res, void *opaque)
 {
@@ -45,6 +71,13 @@ vlc_http_res_req(const struct vlc_http_resource *res, void *opaque)
                               res->authority, res->path);
     if (unlikely(req == NULL))
         return NULL;
+
+    char *custom_headers = var_InheritString(vlc_http_mgr_get_object(res->manager), "http-custom-header");
+    if (custom_headers != NULL)
+    {
+        vlc_http_add_custom_headers(req, custom_headers);
+        free(custom_headers);
+    }
 
     /* Authentication */
     if (res->username != NULL && res->password != NULL)
