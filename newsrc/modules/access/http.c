@@ -654,11 +654,6 @@ static int Connect( stream_t *p_access )
         vlc_memstream_printf( &stream, "?%s", p_sys->url.psz_option );
     vlc_memstream_puts( &stream, " HTTP/1.0\r\n" );
 
-    //vlc_memstream_printf( &stream, "Host: %s", p_sys->url.psz_host );
-    //if( p_sys->url.i_port != 80 )
-        //vlc_memstream_printf( &stream, ":%d", p_sys->url.i_port );
-    //vlc_memstream_puts( &stream, "\r\n" );
-
     /* User Agent */
     vlc_memstream_printf( &stream, "User-Agent: %s\r\n",
                           p_sys->psz_user_agent );
@@ -694,9 +689,6 @@ static int Connect( stream_t *p_access )
                                    auth );
         free( auth );
     }
-
-    /* ICY meta data request */
-    vlc_memstream_puts( &stream, "Icy-MetaData: 1\r\n" );
 
     vlc_memstream_puts( &stream, "\r\n" );
 
