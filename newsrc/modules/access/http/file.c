@@ -55,13 +55,7 @@ static int vlc_http_file_req(const struct vlc_http_resource *res,
     {
         const char *str = vlc_http_msg_get_header(file->resource.response,
                                                   "ETag");
-        if (str != NULL)
-        {
-            if (!memcmp(str, "W/", 2))
-                str += 2; /* skip weak mark */
-            vlc_http_msg_add_header(req, "If-Match", "%s", str);
-        }
-        else
+        if (str == NULL)
         {
             time_t mtime = vlc_http_msg_get_mtime(file->resource.response);
             if (mtime != -1)
@@ -69,9 +63,6 @@ static int vlc_http_file_req(const struct vlc_http_resource *res,
         }
     }
 
-    //if (vlc_http_msg_add_header(req, "Range", "bytes=%" PRIuMAX "-", *offset)
-     //&& *offset != 0)
-        //return -1;
     return 0;
 }
 
