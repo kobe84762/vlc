@@ -148,3 +148,7 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
 
     return inputbytes;
 }
+
+void CommonEncryptionSession::decrypt(block_t** segment)
+{
+}
