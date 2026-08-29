@@ -64,6 +64,8 @@ namespace adaptive
                 void                addCodecs               (const std::string &);
                 void                getCodecsDesc           (CodecDescriptionList *) const;
                 void                pruneByPlaybackTime     (vlc_tick_t) override;
+                void                saveInitData            (block_t**);
+                void                prependInitData         (block_t**) const;
 
                 virtual vlc_tick_t  getMinAheadTime         (uint64_t) const;
                 virtual bool        needsUpdate             (uint64_t) const;
@@ -93,6 +95,7 @@ namespace adaptive
                 BaseAdaptationSet                  *adaptationSet;
                 uint64_t                            bandwidth;
                 std::list<std::string>              codecs;
+                block_t*                            initData;
         };
     }
 }
