@@ -46,12 +46,15 @@ BaseRepresentation::BaseRepresentation( BaseAdaptationSet *set ) :
                 CommonAttributesElements( set ),
                 SegmentInformation( set ),
                 adaptationSet   ( set ),
-                bandwidth       (0)
+                bandwidth       (0),
+                initData        (nullptr)
 {
 }
 
 BaseRepresentation::~BaseRepresentation ()
 {
+    if (initData)
+        block_Release(initData);
 }
 
 StreamFormat BaseRepresentation::getStreamFormat() const
@@ -153,6 +156,24 @@ void BaseRepresentation::pruneByPlaybackTime(vlc_tick_t time)
     uint64_t num;
     if(getSegmentNumberByTime(time, &num))
         pruneBySegmentNumber(num);
+}
+
+void BaseRepresentation::saveInitData(block_t **data)
+{
+    if (initData)
+        block_Release(initData);
+    
+    initData = block_Duplicate(*data);
+}
+
+void BaseRepresentation::prependInitData(block_t **segment) const
+{
+    if (!initData)
+        return;
+    
+    *segment = block_TryRealloc(*segment, initData->i_buffer, (*segment)->i_buffer);
+    if (*segment)
+        memcpy((*segment)->p_buffer, initData->p_buffer, initData->i_buffer);
 }
 
 vlc_tick_t BaseRepresentation::getMinAheadTime(uint64_t curnum) const
