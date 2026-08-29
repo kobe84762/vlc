@@ -65,7 +65,7 @@ namespace adaptive
                 void                getCodecsDesc           (CodecDescriptionList *) const;
                 void                pruneByPlaybackTime     (vlc_tick_t) override;
                 void                saveInitData            (block_t**);
-                void                prependInitData         (block_t**) const;
+                bool                prependInitData         (block_t**) const;
 
                 virtual vlc_tick_t  getMinAheadTime         (uint64_t) const;
                 virtual bool        needsUpdate             (uint64_t) const;
