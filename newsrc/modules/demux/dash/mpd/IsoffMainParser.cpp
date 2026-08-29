@@ -299,6 +299,38 @@ void    IsoffMainParser::parseAdaptationSets  (MPD *mpd, Node *periodNode, BaseP
 
         parseCommonAttributesElements(*it, adaptationSet);
 
+        adaptive::encryption::CommonEncryption encryption;
+        const std::vector<Node *> contentProtections = DOMHelper::getElementByTagName((*it), "ContentProtection", getDASHNamespace(), false);
+        std::vector<Node *>::const_iterator contentProtectionIt;
+        for(contentProtectionIt = contentProtections.begin(); contentProtectionIt != contentProtections.end(); ++contentProtectionIt)
+        {
+            if ((*contentProtectionIt)->getAttributeValue("schemeIdUri") == "urn:mpeg:dash:mp4protection:2011")
+            {
+                const std::string cencNS = (*contentProtectionIt)->getAttributeValue("xmlns:cenc", "http://www.w3.org/2000/xmlns/");
+                if ((*contentProtectionIt)->hasAttribute("cenc:default_KID", cencNS))
+                {
+                    std::string kid = (*contentProtectionIt)->getAttributeValue("cenc:default_KID", cencNS);
+                    kid.erase(std::remove(kid.begin(), kid.end(), '-'), kid.end());
+                    std::transform(kid.begin(), kid.end(), kid.begin(), [](unsigned char c){ return std::tolower(c); });
+                    encryption.iv = std::vector<unsigned char>(kid.begin(), kid.end());
+                }
+            }
+            else if ((*contentProtectionIt)->getAttributeValue("schemeIdUri") == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed")
+            {
+                encryption.method = adaptive::encryption::CommonEncryption::Method::AES_128_CTR;
+            }
+            else if ((*contentProtectionIt)->getAttributeValue("schemeIdUri") == "urn:uuid:e2719d58-a985-b3c9-781a-b030af78d30e")
+            {
+                encryption.method = adaptive::encryption::CommonEncryption::Method::AES_128_CTR;
+                const std::vector<Node *> LaurlNodes = (*contentProtectionIt)->getSubNodes();
+                std::vector<Node *>::const_iterator LaurlNodesIt;
+                for(LaurlNodesIt = LaurlNodes.begin(); LaurlNodesIt != LaurlNodes.end(); ++LaurlNodesIt)
+                {
+                    encryption.uri = (*LaurlNodesIt)->getText();
+                }
+            }
+        }
+
         if((*it)->hasAttribute("lang"))
             adaptationSet->setLang((*it)->getAttributeValue("lang"));
 
@@ -342,7 +374,7 @@ void    IsoffMainParser::parseAdaptationSets  (MPD *mpd, Node *periodNode, BaseP
 
         parseSegmentInformation(mpd, *it, adaptationSet, &nextid);
 
-        parseRepresentations(mpd, (*it), adaptationSet);
+        parseRepresentations(mpd, (*it), adaptationSet, encryption);
 
 #ifdef ADAPTATIVE_ADVANCED_DEBUG
         if(adaptationSet->description.empty())
@@ -369,7 +401,7 @@ void IsoffMainParser::parseCommonAttributesElements(Node *node,
         commonAttrElements->setMimeType(node->getAttributeValue("mimeType"));
 }
 
-void    IsoffMainParser::parseRepresentations (MPD *mpd, Node *adaptationSetNode, AdaptationSet *adaptationSet)
+void    IsoffMainParser::parseRepresentations (MPD *mpd, Node *adaptationSetNode, AdaptationSet *adaptationSet, adaptive::encryption::CommonEncryption &encryption)
 {
     std::vector<Node *> representations = DOMHelper::getElementByTagName(adaptationSetNode, "Representation", getDASHNamespace(), false);
     uint64_t nextid = 0;
@@ -408,6 +440,8 @@ void    IsoffMainParser::parseRepresentations (MPD *mpd, Node *adaptationSetNode
                 currentRepresentation->addAttribute(base);
         }
 
+        currentRepresentation->setEncryption(encryption);
+        
         adaptationSet->addRepresentation(currentRepresentation);
     }
 }
