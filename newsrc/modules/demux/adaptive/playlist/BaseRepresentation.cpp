@@ -166,14 +166,18 @@ void BaseRepresentation::saveInitData(block_t **data)
     initData = block_Duplicate(*data);
 }
 
-void BaseRepresentation::prependInitData(block_t **segment) const
+bool BaseRepresentation::prependInitData(block_t **segment) const
 {
     if (!initData)
-        return;
+        return false;
     
     *segment = block_TryRealloc(*segment, initData->i_buffer, (*segment)->i_buffer);
     if (*segment)
         memcpy((*segment)->p_buffer, initData->p_buffer, initData->i_buffer);
+    else
+        return false;
+
+    return true;
 }
 
 vlc_tick_t BaseRepresentation::getMinAheadTime(uint64_t curnum) const
