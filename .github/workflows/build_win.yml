@@ -27,10 +27,10 @@ jobs:
       - name: Download and add Bento4 source code
         run: |
           git clone --depth 1 -b master https://github.com/axiomatic-systems/Bento4
-          cp -r Bento4/Source/C++/Core/. newsrc/modules/demux/adaptive/encryption
-          cp -r Bento4/Source/C++/Codecs/. newsrc/modules/demux/adaptive/encryption
-          cp -r Bento4/Source/C++/Crypto/. newsrc/modules/demux/adaptive/encryption
-          cp -r Bento4/Source/C++/MetaData/. newsrc/modules/demux/adaptive/encryption
+          cp -r Bento4/Source/C++/Core/. vlc/modules/demux/adaptive/encryption
+          cp -r Bento4/Source/C++/Codecs/. vlc/modules/demux/adaptive/encryption
+          cp -r Bento4/Source/C++/Crypto/. vlc/modules/demux/adaptive/encryption
+          cp -r Bento4/Source/C++/MetaData/. vlc/modules/demux/adaptive/encryption
           
       - name: Copy modified source code to VLC
         run: cp -R ${{ github.workspace }}/newsrc/* ${{ github.workspace }}/vlc
