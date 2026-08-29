@@ -22,7 +22,7 @@ private:
 
 public:
 	static std::string getKeyId(block_t **initData);
-	static void decrypt(block_t **segment);
+	static void decrypt(block_t **segment, const char* keyId, const char* key);
 	static bool removeAtom(block_t **segment, const char *atom);
 
 private:
