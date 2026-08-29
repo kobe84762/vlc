@@ -77,8 +77,9 @@ void SegmentChunk::onDownload(block_t **pp_block)
     {
         if ( rep )
         {
-            rep->prependInitData(pp_block);
-            encryptionSession->decrypt(pp_block);
+            const bool success = rep->prependInitData(pp_block);
+            if (success)
+                encryptionSession->decrypt(pp_block);
 
             return;
         }
