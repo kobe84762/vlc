@@ -66,6 +66,24 @@ bool SegmentChunk::decrypt(block_t **pp_block)
 
 void SegmentChunk::onDownload(block_t **pp_block)
 {
+    if ( encryptionSession && encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_128_CTR && source->getChunkType() == adaptive::http::ChunkType::Init )
+    {
+        if ( rep )
+            rep->saveInitData(pp_block);
+
+        return;
+    }
+    else if ( encryptionSession && encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_128_CTR && source->getChunkType() == adaptive::http::ChunkType::Segment )
+    {
+        if ( rep )
+        {
+            rep->prependInitData(pp_block);
+            encryptionSession->decrypt(pp_block);
+
+            return;
+        }
+    }
+    
     decrypt(pp_block);
 }
 
