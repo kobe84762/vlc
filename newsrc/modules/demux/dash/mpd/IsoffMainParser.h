@@ -30,6 +30,7 @@
 #endif
 
 #include "../../adaptive/playlist/SegmentBaseType.hpp"
+#include "../../adaptive/encryption/CommonEncryption.hpp"
 #include "Profile.hpp"
 
 #include <cstdlib>
@@ -77,7 +78,7 @@ namespace dash
                 void    parseMPDBaseUrl     (MPD *, xml::Node *);
                 void    parseMPDAttributes  (MPD *, xml::Node *);
                 void    parseAdaptationSets (MPD *, xml::Node *periodNode, BasePeriod *period);
-                void    parseRepresentations(MPD *, xml::Node *adaptationSetNode, AdaptationSet *adaptationSet);
+                void    parseRepresentations(MPD *, xml::Node *adaptationSetNode, AdaptationSet *adaptationSet, adaptive::encryption::CommonEncryption &encryption);
                 void    parseInitSegment    (xml::Node *, Initializable<InitSegment> *, SegmentInformation *);
                 void    parseTimeline       (xml::Node *, AbstractMultipleSegmentBaseType *);
                 void    parsePeriods        (MPD *, xml::Node *);
