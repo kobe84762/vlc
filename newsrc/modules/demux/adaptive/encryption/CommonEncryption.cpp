@@ -97,6 +97,28 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
         }
         ctx = handle;
     }
+    else if(encryption.method == CommonEncryption::Method::AES_128_CTR)
+    {
+        if(key.empty())
+        {
+            if(!encryption.uri.empty())
+                key = res->getKeyring()->getKey(res, encryption.uri);
+            if(key.size() != 16)
+                return false;
+        }
+
+        vlc_gcrypt_init();
+        gcry_cipher_hd_t handle;
+        if( gcry_cipher_open(&handle, GCRY_CIPHER_AES, GCRY_CIPHER_MODE_CTR, 0) ||
+                gcry_cipher_setkey(handle, &key[0], 16) ||
+                gcry_cipher_setiv(handle, &encryption.iv[0], 16) )
+        {
+            gcry_cipher_close(handle);
+            ctx = nullptr;
+            return false;
+        }
+        ctx = handle;
+    }
 #endif
     return true;
 }
