@@ -55,9 +55,32 @@ bool SegmentChunk::decrypt(block_t **pp_block)
 
     if(encryptionSession)
     {
-        bool b_last = !hasMoreData();
-        p_block->i_buffer = encryptionSession->decrypt(p_block->p_buffer,
-                                                       p_block->i_buffer, b_last);
+        const bool b_last = !hasMoreData();
+        if ( encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_128_CBC )
+        {
+            p_block->i_buffer = encryptionSession->decrypt(p_block->p_buffer, p_block->i_buffer, b_last);
+        }
+        else if ( encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_128_CTR )
+        {
+            if ( source->getChunkType() == adaptive::http::ChunkType::Init )
+            {
+                if (rep)
+                    rep->saveInitData(pp_block);
+            }
+            else if ( source->getChunkType() == adaptive::http::ChunkType::Segment )
+            {
+                if ( !encryptionSession->hasKeyId() )
+                    encryptionSession->setKeyId(Ap4Tools::getKeyId(pp_block));
+
+                if (rep)
+                {
+                    const bool success = rep->prependInitData(pp_block);
+                    if (success)
+                        encryptionSession->decrypt(pp_block);
+                }
+            }
+        }
+        
         if(b_last)
             encryptionSession->close();
     }
@@ -67,28 +90,6 @@ bool SegmentChunk::decrypt(block_t **pp_block)
 
 void SegmentChunk::onDownload(block_t **pp_block)
 {
-    if ( encryptionSession && encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_128_CTR && source->getChunkType() == adaptive::http::ChunkType::Init )
-    {
-        if ( rep )
-            rep->saveInitData(pp_block);
-
-        if ( !encryptionSession->hasKeyId() )
-            encryptionSession->setKeyId(Ap4Tools::getKeyId(pp_block));
-
-        return;
-    }
-    else if ( encryptionSession && encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_128_CTR && source->getChunkType() == adaptive::http::ChunkType::Segment )
-    {
-        if ( rep )
-        {
-            const bool success = rep->prependInitData(pp_block);
-            if (success)
-                encryptionSession->decrypt(pp_block);
-
-            return;
-        }
-    }
-    
     decrypt(pp_block);
 }
 
