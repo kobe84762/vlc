@@ -1,3 +1,5 @@
+#include <vlc_block.h>
+
 #include "Ap4.h"
 #include "Ap4Tools.h"
 
