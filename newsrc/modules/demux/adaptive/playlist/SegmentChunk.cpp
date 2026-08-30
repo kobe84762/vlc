@@ -25,6 +25,7 @@
 #include "Segment.h"
 #include "BaseRepresentation.h"
 #include "../encryption/CommonEncryption.hpp"
+#include "../encryption/Ap4Tools.h"
 
 #include <vlc_block.h>
 
@@ -70,6 +71,9 @@ void SegmentChunk::onDownload(block_t **pp_block)
     {
         if ( rep )
             rep->saveInitData(pp_block);
+
+        if ( !encryptionSession->hasKeyId() )
+            encryptionSession->setKeyId(Ap4Tools::getKeyId(pp_block));
 
         return;
     }
