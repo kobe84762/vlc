@@ -1,8 +1,9 @@
 #ifndef _AP4_TOOLS_H_
 #define _AP4_TOOLS_H_
 
-#include <vlc_block.h>
 #include <string>
+
+typedef struct vlc_frame_t block_t;
 
 class Ap4Tools final {
 private:
