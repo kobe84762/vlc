@@ -37,6 +37,8 @@
 #include "../ID.hpp"
 #include "../tools/Helper.h"
 
+#include <vlc_block.h>
+
 #include <limits>
 
 using namespace adaptive;
