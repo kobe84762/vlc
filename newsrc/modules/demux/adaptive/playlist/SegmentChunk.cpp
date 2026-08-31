@@ -30,6 +30,24 @@
 
 #include <cassert>
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
+namespace
+{
+    void writeToLog(const std::string& text)
+    {
+        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+        if (logfile.is_open())
+        {
+            logfile << text << std::endl;
+            logfile.flush();
+            logfile.close();
+        }
+    }
+}
+
 using namespace adaptive::playlist;
 using namespace adaptive::encryption;
 using namespace adaptive;
@@ -50,6 +68,7 @@ SegmentChunk::~SegmentChunk()
 
 bool SegmentChunk::decrypt(block_t **pp_block)
 {
+    writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) called.");
     block_t *p_block = *pp_block;
 
     if(encryptionSession)
@@ -64,22 +83,38 @@ bool SegmentChunk::decrypt(block_t **pp_block)
             if ( source->getChunkType() == adaptive::http::ChunkType::Init )
             {
                 if (rep)
+                {
+                    writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) Saving init data...");
                     rep->saveInitData(pp_block);
+                    writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) Saving init data done.");
+                }
             }
             else if ( source->getChunkType() == adaptive::http::ChunkType::Segment )
             {
                 if (rep)
                 {
+                    writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) Prepending init data...");
                     const bool success = rep->prependInitData(pp_block);
+                    writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) Prepending init data done.");
                     if (success)
+                    {
+                        writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) Decrypting data...");
                         p_block->i_buffer = encryptionSession->decrypt(p_block->p_buffer, p_block->i_buffer, b_last);
+                        writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) Decrypting data done.");
+                    }
                 }
             }
         }
         
         if(b_last)
+        {
+            writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) Closing encryption session...");
             encryptionSession->close();
+            writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) Closing encryption session done.");
+        }
     }
+
+    writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) call done.");
 
     return true;
 }
