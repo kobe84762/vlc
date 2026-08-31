@@ -49,6 +49,24 @@
 #include <cstdio>
 #include <limits>
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
+namespace
+{
+    void writeToLog(const std::string& text)
+    {
+        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+        if (logfile.is_open())
+        {
+            logfile << text << std::endl;
+            logfile.flush();
+            logfile.close();
+        }
+    }
+}
+
 using namespace dash::mpd;
 using namespace adaptive::xml;
 using namespace adaptive::playlist;
@@ -289,6 +307,7 @@ size_t IsoffMainParser::parseSegmentInformation(MPD *mpd, Node *node,
 
 void    IsoffMainParser::parseAdaptationSets  (MPD *mpd, Node *periodNode, BasePeriod *period)
 {
+    writeToLog("void IsoffMainParser::parseAdaptationSets  (MPD *mpd, Node *periodNode, BasePeriod *period) called.");
     std::vector<Node *> adaptationSets = DOMHelper::getElementByTagName(periodNode, "AdaptationSet", getDASHNamespace(), false);
     std::vector<Node *>::const_iterator it;
     uint64_t nextid = 0;
@@ -311,9 +330,12 @@ void    IsoffMainParser::parseAdaptationSets  (MPD *mpd, Node *periodNode, BaseP
                 const std::string cencNS = (*contentProtectionIt)->getAttributeValue("xmlns:cenc", "http://www.w3.org/2000/xmlns/");
                 if ((*contentProtectionIt)->hasAttribute("cenc:default_KID", cencNS))
                 {
+                    writeToLog("Found default KID.");
                     std::string kid = (*contentProtectionIt)->getAttributeValue("cenc:default_KID", cencNS);
                     kid.erase(std::remove(kid.begin(), kid.end(), '-'), kid.end());
                     std::transform(kid.begin(), kid.end(), kid.begin(), [](unsigned char c){ return std::tolower(c); });
+
+                    writeToLog("Default KID is: " + kid);
 
                     const int kidLength = kid.length();
                     std::string newKid;
@@ -323,7 +345,8 @@ void    IsoffMainParser::parseAdaptationSets  (MPD *mpd, Node *periodNode, BaseP
                         char chr = (char)(int)strtol(byte.c_str(), NULL, 16);
                         newKid.push_back(chr);
                     }
-                    
+
+                    writeToLog("Raw KID is: " + newKid);
                     encryption.iv = std::vector<unsigned char>(newKid.begin(), newKid.end());
                 }
             }
@@ -386,7 +409,11 @@ void    IsoffMainParser::parseAdaptationSets  (MPD *mpd, Node *periodNode, BaseP
 
         parseSegmentInformation(mpd, *it, adaptationSet, &nextid);
 
+        writeToLog("Parsing representation.");
+
         parseRepresentations(mpd, (*it), adaptationSet, encryption);
+
+        writeToLog("Representation parsed.");
 
 #ifdef ADAPTATIVE_ADVANCED_DEBUG
         if(adaptationSet->description.empty())
@@ -398,6 +425,8 @@ void    IsoffMainParser::parseAdaptationSets  (MPD *mpd, Node *periodNode, BaseP
         else
             delete adaptationSet;
     }
+
+    writeToLog("void IsoffMainParser::parseAdaptationSets  (MPD *mpd, Node *periodNode, BasePeriod *period) call done.");
 }
 
 void IsoffMainParser::parseCommonAttributesElements(Node *node,
