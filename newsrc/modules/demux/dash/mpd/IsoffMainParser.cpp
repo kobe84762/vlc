@@ -444,6 +444,7 @@ void IsoffMainParser::parseCommonAttributesElements(Node *node,
 
 void    IsoffMainParser::parseRepresentations (MPD *mpd, Node *adaptationSetNode, AdaptationSet *adaptationSet, adaptive::encryption::CommonEncryption &encryption)
 {
+    writeToLog("void IsoffMainParser::parseRepresentations (MPD *mpd, Node *adaptationSetNode, AdaptationSet *adaptationSet, adaptive::encryption::CommonEncryption &encryption) called.");
     std::vector<Node *> representations = DOMHelper::getElementByTagName(adaptationSetNode, "Representation", getDASHNamespace(), false);
     uint64_t nextid = 0;
 
@@ -485,6 +486,8 @@ void    IsoffMainParser::parseRepresentations (MPD *mpd, Node *adaptationSetNode
         
         adaptationSet->addRepresentation(currentRepresentation);
     }
+
+    writeToLog("void IsoffMainParser::parseRepresentations (MPD *mpd, Node *adaptationSetNode, AdaptationSet *adaptationSet, adaptive::encryption::CommonEncryption &encryption) call done.");
 }
 size_t IsoffMainParser::parseSegmentBase(MPD *mpd, Node * segmentBaseNode, SegmentInformation *info)
 {
