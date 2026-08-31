@@ -69,14 +69,11 @@ bool SegmentChunk::decrypt(block_t **pp_block)
             }
             else if ( source->getChunkType() == adaptive::http::ChunkType::Segment )
             {
-                if ( !encryptionSession->hasKeyId() )
-                    encryptionSession->setKeyId(Ap4Tools::getKeyId(pp_block));
-
                 if (rep)
                 {
                     const bool success = rep->prependInitData(pp_block);
                     if (success)
-                        encryptionSession->decrypt(pp_block);
+                        p_block->i_buffer = encryptionSession->decrypt(p_block->p_buffer, p_block->i_buffer, b_last);
                 }
             }
         }
