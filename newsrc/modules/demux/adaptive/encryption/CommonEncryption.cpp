@@ -161,6 +161,14 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
             }
         }
     }
+    else if(encryption.method == CommonEncryption::Method::AES_128_CTR && ctx)
+    {
+        if ((inputbytes % 16) != 0 || inputbytes < 16 ||
+            gcry_cipher_decrypt(handle, inputdata, inputbytes, nullptr, 0))
+        {
+            inputbytes = 0;
+        }
+    }
     else
 #endif
     if(encryption.method != CommonEncryption::Method::None)
