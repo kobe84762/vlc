@@ -53,7 +53,7 @@ namespace adaptive
 
                 bool start(SharedResources *, const CommonEncryption &);
                 void close();
-                size_t decrypt(void *, size_t, bool);
+                size_t decrypt(void *, size_t, bool, std::string ID = "");
                 CommonEncryption::Method getEncryptionMethod() const { return encryption.method; }
 
             private:
