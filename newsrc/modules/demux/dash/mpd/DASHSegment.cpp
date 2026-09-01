@@ -31,6 +31,24 @@
 #include "../mp4/IndexReader.hpp"
 #include "../../adaptive/playlist/BasePlaylist.hpp"
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
+namespace
+{
+    void writeToLog(const std::string& text)
+    {
+        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+        if (logfile.is_open())
+        {
+            logfile << text << std::endl;
+            logfile.flush();
+            logfile.close();
+        }
+    }
+}
+
 using namespace adaptive::playlist;
 using namespace dash::mpd;
 using namespace dash::mp4;
@@ -48,11 +66,13 @@ DashIndexChunk::~DashIndexChunk()
 
 void DashIndexChunk::onDownload(block_t **pp_block)
 {
+    writeToLog("void DashIndexChunk::onDownload(block_t **pp_block) called.");
     decrypt(pp_block);
 
     if(!rep || ((*pp_block)->i_flags & BLOCK_FLAG_HEADER) == 0 )
         return;
 
+    writeToLog("License URL: " + rep->intheritEncryption().uri);
     IndexReader br(rep->getPlaylist()->getVLCObject());
     br.parseIndex(*pp_block, rep, getStartByteInFile());
 }
