@@ -54,6 +54,7 @@ namespace
 }
 
 using namespace adaptive::encryption;
+using namespace std;
 
 
 CommonEncryption::CommonEncryption()
