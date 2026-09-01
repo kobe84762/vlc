@@ -30,24 +30,6 @@
 
 #include <cassert>
 
-#include <iostream>
-#include <fstream>
-#include <string>
-
-namespace
-{
-    void writeToLog(const std::string& text)
-    {
-        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
-        if (logfile.is_open())
-        {
-            logfile << text << std::endl;
-            logfile.flush();
-            logfile.close();
-        }
-    }
-}
-
 using namespace adaptive::playlist;
 using namespace adaptive::encryption;
 using namespace adaptive;
@@ -68,14 +50,12 @@ SegmentChunk::~SegmentChunk()
 
 bool SegmentChunk::decrypt(block_t **pp_block)
 {
-    writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) called.");
     block_t *p_block = *pp_block;
 
     if(encryptionSession)
     {
-        writeToLog("bool SegmentChunk::decrypt(block_t **pp_block) has encryption session.");
-        writeToLog("License URL: " + rep->intheritEncryption().uri);
-        writeToLog("Key ID: " + std::string(rep->intheritEncryption().iv.begin(), rep->intheritEncryption().iv.end()));
+        if ( encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_128_CTR && source->getChunkType() == adaptive::http::ChunkType::Init )
+            return true;
         bool b_last = !hasMoreData();
         p_block->i_buffer = encryptionSession->decrypt(p_block->p_buffer,
                                                        p_block->i_buffer, b_last);
@@ -88,7 +68,6 @@ bool SegmentChunk::decrypt(block_t **pp_block)
 
 void SegmentChunk::onDownload(block_t **pp_block)
 {
-    writeToLog("void SegmentChunk::onDownload(block_t **pp_block) called.");
     decrypt(pp_block);
 }
 
@@ -104,7 +83,6 @@ void SegmentChunk::setStreamFormat(const StreamFormat &f)
 
 void SegmentChunk::setEncryptionSession(CommonEncryptionSession *s)
 {
-    writeToLog("void SegmentChunk::setEncryptionSession(CommonEncryptionSession *s) called.");
     delete encryptionSession;
     encryptionSession = s;
 }
