@@ -43,7 +43,10 @@
 #include "../../adaptive/tools/Helper.h"
 #include "../../adaptive/tools/Debug.hpp"
 #include "../../adaptive/tools/Conversions.hpp"
+#include "../../adaptive/encryption/CommonEncryption.hpp"
 #include <vlc_stream.h>
+#include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <limits>
 
@@ -371,6 +374,49 @@ void IsoffMainParser::parseCommonAttributesElements(Node *node,
 
 void    IsoffMainParser::parseRepresentations (MPD *mpd, Node *adaptationSetNode, AdaptationSet *adaptationSet)
 {
+    adaptive::encryption::CommonEncryption encryption;
+    const std::vector<Node *> contentProtections = DOMHelper::getElementByTagName(adaptationSetNode, "ContentProtection", getDASHNamespace(), false);
+    std::vector<Node *>::const_iterator contentProtectionIt;
+
+    for(contentProtectionIt = contentProtections.begin(); contentProtectionIt != contentProtections.end(); ++contentProtectionIt)
+    {
+        if ((*contentProtectionIt)->getAttributeValue("schemeIdUri") == "urn:mpeg:dash:mp4protection:2011")
+        {
+            const std::string cencNS = (*contentProtectionIt)->getAttributeValue("xmlns:cenc", "http://www.w3.org/2000/xmlns/");
+            if ((*contentProtectionIt)->hasAttribute("cenc:default_KID", cencNS))
+            {
+                std::string kid = (*contentProtectionIt)->getAttributeValue("cenc:default_KID", cencNS);
+                kid.erase(std::remove(kid.begin(), kid.end(), '-'), kid.end());
+                std::transform(kid.begin(), kid.end(), kid.begin(), [](unsigned char c){ return std::tolower(c); });
+
+                const size_t kidLength = kid.length();
+                std::string newKid;
+                for (size_t i = 0; i < kidLength; i += 2)
+                {
+                    const std::string byte = kid.substr(i, 2);
+                    char chr = static_cast<char>(static_cast<int>(strtol(byte.c_str(), nullptr, 16)));
+                    newKid.push_back(chr);
+                }
+
+                encryption.iv = std::vector<unsigned char>(newKid.begin(), newKid.end());
+            }
+        }
+        else if ((*contentProtectionIt)->getAttributeValue("schemeIdUri") == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed")
+        {
+            encryption.method = adaptive::encryption::CommonEncryption::Method::AES_128_CTR;
+        }
+        else if ((*contentProtectionIt)->getAttributeValue("schemeIdUri") == "urn:uuid:e2719d58-a985-b3c9-781a-b030af78d30e")
+        {
+            encryption.method = adaptive::encryption::CommonEncryption::Method::AES_128_CTR;
+            const std::vector<Node *> LaurlNodes = (*contentProtectionIt)->getSubNodes();
+            std::vector<Node *>::const_iterator LaurlNodesIt;
+            for(LaurlNodesIt = LaurlNodes.begin(); LaurlNodesIt != LaurlNodes.end(); ++LaurlNodesIt)
+            {
+                encryption.uri = (*LaurlNodesIt)->getText();
+            }
+        }
+    }
+    
     std::vector<Node *> representations = DOMHelper::getElementByTagName(adaptationSetNode, "Representation", getDASHNamespace(), false);
     uint64_t nextid = 0;
 
@@ -407,6 +453,8 @@ void    IsoffMainParser::parseRepresentations (MPD *mpd, Node *adaptationSetNode
             if(base)
                 currentRepresentation->addAttribute(base);
         }
+
+        currentRepresentation->setEncryption(encryption);
 
         adaptationSet->addRepresentation(currentRepresentation);
     }
