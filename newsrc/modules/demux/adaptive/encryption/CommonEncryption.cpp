@@ -132,12 +132,40 @@ void CommonEncryptionSession::close()
 #endif
 }
 
-size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool last)
+size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool last, std::string ID)
 {
 #ifndef HAVE_GCRYPT
     VLC_UNUSED(inputdata);
     VLC_UNUSED(last);
 #else
+    // Prepend init
+    if(encryption.method == CommonEncryption::Method::AES_128_CTR)
+    {
+        streampos size;
+        const std::string path = "I:/" + ID + ".mp4";
+        writeToLog("Representation ID full path is: " + path);
+        ifstream file (path, ios::in|ios::binary|ios::ate);
+        if (file.is_open())
+        {
+            writeToLog("Init file opened.");
+            size = file.tellg();
+            const size_t finalSize = static_cast<size_t>(size) + inputbytes;
+            void* inputdatatemp = malloc(inputbytes);
+            memcpy(inputdatatemp, inputdata, inputbytes);
+            free(inputdata);
+            inputdata = malloc(finalSize);
+            file.seekg (0, ios::beg);
+            file.read (inputdata, size);
+            file.close();
+
+            memcpy(inputdata + static_cast<int>(size), inputdatatemp, inputbytes);
+            free(inputdatatemp);
+
+            inputbytes = finalSize;
+        }
+        else
+            writeToLog("ERROR: Could not open init file.");
+    }
     gcry_cipher_hd_t handle = reinterpret_cast<gcry_cipher_hd_t>(ctx);
     if((encryption.method == CommonEncryption::Method::AES_128_CBC || encryption.method == CommonEncryption::Method::AES_128_CTR) && ctx)
     {
