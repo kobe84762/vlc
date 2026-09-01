@@ -23,7 +23,6 @@
 #endif
 
 #include "CommonEncryption.hpp"
-#include "Ap4.h"
 #include "Keyring.hpp"
 #include "../SharedResources.hpp"
 
@@ -147,8 +146,4 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     }
 
     return inputbytes;
-}
-
-void CommonEncryptionSession::decrypt(block_t** segment)
-{
 }
