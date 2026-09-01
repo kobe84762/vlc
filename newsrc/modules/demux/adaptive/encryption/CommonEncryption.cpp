@@ -35,6 +35,24 @@
  #include <vlc_gcrypt.h>
 #endif
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
+namespace
+{
+    void writeToLog(const std::string& text)
+    {
+        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+        if (logfile.is_open())
+        {
+            logfile << text << std::endl;
+            logfile.flush();
+            logfile.close();
+        }
+    }
+}
+
 using namespace adaptive::encryption;
 
 
@@ -67,14 +85,17 @@ CommonEncryptionSession::~CommonEncryptionSession()
 
 bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc)
 {
+    writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) called.");
     if(ctx)
         close();
     encryption = enc;
+    writeToLog("License URL: " + encryption.uri);
+    writeToLog("Key ID: " + std::string(encryption.iv.begin(), encryption.iv.end()));
 #ifndef HAVE_GCRYPT
     /* We don't use the SharedResources */
     VLC_UNUSED(res);
 #else
-    if(encryption.method == CommonEncryption::Method::AES_128_CBC)
+    if(encryption.method == CommonEncryption::Method::AES_128_CBC || encryption.method == CommonEncryption::Method::AES_128_CTR)
     {
         if(key.empty())
         {
@@ -86,7 +107,8 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
 
         vlc_gcrypt_init();
         gcry_cipher_hd_t handle;
-        if( gcry_cipher_open(&handle, GCRY_CIPHER_AES, GCRY_CIPHER_MODE_CBC, 0) ||
+        if( gcry_cipher_open(&handle, GCRY_CIPHER_AES,
+            (encryption.method == CommonEncryption::Method::AES_128_CBC) ? GCRY_CIPHER_MODE_CBC : GCRY_CIPHER_MODE_CTR, 0) ||
                 gcry_cipher_setkey(handle, &key[0], 16) ||
                 gcry_cipher_setiv(handle, &encryption.iv[0], 16) )
         {
@@ -117,14 +139,14 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     VLC_UNUSED(last);
 #else
     gcry_cipher_hd_t handle = reinterpret_cast<gcry_cipher_hd_t>(ctx);
-    if(encryption.method == CommonEncryption::Method::AES_128_CBC && ctx)
+    if((encryption.method == CommonEncryption::Method::AES_128_CBC || encryption.method == CommonEncryption::Method::AES_128_CTR) && ctx)
     {
         if ((inputbytes % 16) != 0 || inputbytes < 16 ||
             gcry_cipher_decrypt(handle, inputdata, inputbytes, nullptr, 0))
         {
             inputbytes = 0;
         }
-        else if(last)
+        else if(last && encryption.method == CommonEncryption::Method::AES_128_CBC)
         {
             /* last bytes */
             /* remove the PKCS#7 padding from the buffer */
