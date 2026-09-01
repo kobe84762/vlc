@@ -35,6 +35,24 @@
  #include <vlc_gcrypt.h>
 #endif
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
+namespace
+{
+    void writeToLog(const std::string& text)
+    {
+        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+        if (logfile.is_open())
+        {
+            logfile << text << std::endl;
+            logfile.flush();
+            logfile.close();
+        }
+    }
+}
+
 using namespace adaptive::encryption;
 
 
@@ -67,6 +85,7 @@ CommonEncryptionSession::~CommonEncryptionSession()
 
 bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc)
 {
+    writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) called.");
     if(ctx)
         close();
     encryption = enc;
@@ -81,7 +100,10 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
             if(!encryption.uri.empty())
                 key = res->getKeyring()->getKey(res, encryption.uri);
             if(key.size() != 16)
+            {
+                writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) Key size is not 16 bytes for CBC.");
                 return false;
+            }
         }
 
         vlc_gcrypt_init();
@@ -92,6 +114,7 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
         {
             gcry_cipher_close(handle);
             ctx = nullptr;
+            writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) Failed to open gcrypt for CBC.");
             return false;
         }
         ctx = handle;
@@ -103,7 +126,10 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
             if(!encryption.uri.empty())
                 key = res->getKeyring()->getKey(res, encryption.uri);
             if(key.size() != 16)
+            {
+                writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) Key size is not 16 bytes for CTR.");
                 return false;
+            }
         }
 
         vlc_gcrypt_init();
@@ -114,11 +140,13 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
         {
             gcry_cipher_close(handle);
             ctx = nullptr;
+            writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) Failed to open gcrypt for CTR.");
             return false;
         }
         ctx = handle;
     }
 #endif
+    writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) call done.");
     return true;
 }
 
