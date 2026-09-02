@@ -97,11 +97,3 @@ KeyringKey Keyring::getKey(SharedResources *resources, const std::string &uri)
 
     return key;
 }
-
-std::string Keyring::getCustomKey(const std::vector<unsigned char> &keyId) const
-{
-    const std::string kid(keyId.begin(), keyId.end());
-    std::map<std::string, std::string>::iterator it = customKeys.find(kid);
-
-    return it == customKeys.end() ? "" : (*it).second;
-}
