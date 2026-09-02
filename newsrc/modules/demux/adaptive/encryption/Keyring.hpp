@@ -48,7 +48,6 @@ namespace adaptive
             private:
                 static constexpr const int MAX_KEYS = 1000;
                 std::map<std::string, KeyringKey> keys;
-                std::map<std::string, std::string> clearKeys;
                 std::map<std::string, std::string> customKeys;
                 std::list<std::string> lru;
                 vlc_object_t *obj;
