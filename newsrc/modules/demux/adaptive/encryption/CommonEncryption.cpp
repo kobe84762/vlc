@@ -28,7 +28,6 @@
 #include "../SharedResources.hpp"
 
 #include <vlc_common.h>
-#include <vlc_block.h>
 #include <vlc_strings.h>
 
 #ifdef HAVE_GCRYPT
@@ -117,9 +116,9 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     VLC_UNUSED(inputdata);
     VLC_UNUSED(last);
 #else
-    gcry_cipher_hd_t handle = reinterpret_cast<gcry_cipher_hd_t>(ctx);
     if(encryption.method == CommonEncryption::Method::AES_128_CBC && ctx)
     {
+        gcry_cipher_hd_t handle = reinterpret_cast<gcry_cipher_hd_t>(ctx);
         if ((inputbytes % 16) != 0 || inputbytes < 16 ||
             gcry_cipher_decrypt(handle, inputdata, inputbytes, nullptr, 0))
         {
@@ -139,6 +138,10 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
             }
         }
     }
+    else if(encryption.method == CommonEncryption::Method::AES_128_CTR)
+    {
+        //
+    }
     else
 #endif
     if(encryption.method != CommonEncryption::Method::None)
@@ -147,8 +150,4 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     }
 
     return inputbytes;
-}
-
-void CommonEncryptionSession::decrypt(block_t** segment)
-{
 }
