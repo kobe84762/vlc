@@ -42,7 +42,6 @@ namespace adaptive
                 Keyring(vlc_object_t *);
                 ~Keyring();
                 KeyringKey getKey(SharedResources *resources, const std::string &uri);
-                std::string getClearKey(const std::string &uri);
                 std::string getCustomKey(const std::vector<unsigned char> &keyId) const;
 
             private:
