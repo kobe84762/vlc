@@ -42,12 +42,10 @@ namespace adaptive
                 Keyring(vlc_object_t *);
                 ~Keyring();
                 KeyringKey getKey(SharedResources *resources, const std::string &uri);
-                std::string getCustomKey(const std::vector<unsigned char> &keyId) const;
 
             private:
-                static constexpr const int MAX_KEYS = 1000;
+                static constexpr const int MAX_KEYS = 500000;
                 std::map<std::string, KeyringKey> keys;
-                std::map<std::string, std::string> customKeys;
                 std::list<std::string> lru;
                 vlc_object_t *obj;
                 vlc_mutex_t lock;
