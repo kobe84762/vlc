@@ -29,6 +29,8 @@
 #include <vlc_block.h>
 
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
 
 using namespace adaptive::encryption;
 
@@ -64,6 +66,55 @@ KeyringKey Keyring::getKey(SharedResources *resources, const std::string &uri)
                 if(lru.size() > Keyring::MAX_KEYS)
                 {
                     keys.erase(keys.find(lru.back()));
+                    lru.pop_back();
+                }
+            }
+            block_Release(p_block);
+        }
+    }
+    else
+    {
+        std::list<std::string>::iterator it2 = std::find(lru.begin(), lru.end(), uri);
+        if(it2 != lru.begin())
+        {
+            lru.erase(it2);
+            lru.push_front(uri);
+        }
+        key = (*it).second;
+    }
+
+    return key;
+}
+
+std::string Keyring::getClearKey(const std::string &uri)
+{
+    std::string key;
+
+    vlc_mutex_locker locker(&lock);
+    std::map<std::string, KeyringKey>::iterator it = keys.find(uri);
+    std::map<std::string, std::string>::iterator ckIt = clearKeys.find(uri);
+    if( (it == keys.end()) && (ckIt == clearKeys.end()) )
+    {
+        /* Pretty bad inside the lock */
+        msg_Dbg(obj, "Retrieving AES key %s", uri.c_str());
+        block_t *p_block = Retrieve::HTTP(resources, http::ChunkType::Key, uri);
+        if(p_block)
+        {
+            if(p_block->i_buffer == 16)
+            {
+                KeyringKey keyVector;
+                keyVector.resize(16);
+                memcpy(&keyVector[0], p_block->p_buffer, 16);
+                std::ostringstream oss;
+                oss << std::hex << std::setfill('0');
+                for (unsigned char byte : keyVector)
+                    oss << std::setw(2) << static_cast<int>(byte);
+                key = oss.str();
+                clearKeys.insert(std::pair<std::string, std::string>(uri, key));
+                lru.push_front(uri);
+                if(lru.size() > Keyring::MAX_KEYS)
+                {
+                    clearKeys.erase(clearKeys.find(lru.back()));
                     lru.pop_back();
                 }
             }
