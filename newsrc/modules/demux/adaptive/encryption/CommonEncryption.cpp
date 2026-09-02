@@ -96,6 +96,16 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
         }
         ctx = handle;
     }
+    else if(encryption.method == CommonEncryption::Method::AES_128_CTR)
+    {
+        if(key.empty())
+        {
+            if(!encryption.uri.empty())
+                key = res->getKeyring()->getKey(res, encryption.uri);
+            if(key.size() != 16)
+                return false;
+        }
+    }
 #endif
     return true;
 }
