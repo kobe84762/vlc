@@ -29,22 +29,8 @@
 #include <vlc_block.h>
 
 #include <algorithm>
-#include <iomanip>
-#include <sstream>
 
 using namespace adaptive::encryption;
-
-namespace
-{
-    std::string rawKeyToHex(const KeyringKey& key)
-    {
-        std::ostringstream oss;
-    	oss << std::hex << std::setfill('0');
-    	for (unsigned char byte : key)
-    		oss << std::setw(2) << static_cast<int>(byte);
-    	return oss.str();
-    }
-}
 
 Keyring::Keyring(vlc_object_t *obj_)
 {
