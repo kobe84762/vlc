@@ -43,7 +43,7 @@ namespace adaptive
                 ~Keyring();
                 KeyringKey getKey(SharedResources *resources, const std::string &uri);
                 std::string getClearKey(const std::string &uri);
-                std::string getCustomKey(const std::vector<unsigned char> &keyId);
+                std::string getCustomKey(const std::vector<unsigned char> &keyId) const;
 
             private:
                 static constexpr const int MAX_KEYS = 1000;
