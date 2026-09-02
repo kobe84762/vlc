@@ -30,12 +30,27 @@
 #include <vlc_common.h>
 #include <vlc_strings.h>
 
+#include <iomanip>
+#include <sstream>
+
 #ifdef HAVE_GCRYPT
  #include <gcrypt.h>
  #include <vlc_gcrypt.h>
 #endif
 
 using namespace adaptive::encryption;
+
+namespace
+{
+    std::string rawKeyToHex(const KeyringKey& key)
+    {
+        std::ostringstream oss;
+    	oss << std::hex << std::setfill('0');
+    	for (unsigned char byte : key)
+    		oss << std::setw(2) << static_cast<int>(byte);
+    	return oss.str();
+    }
+}
 
 
 CommonEncryption::CommonEncryption()
@@ -150,7 +165,35 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     }
     else if(encryption.method == CommonEncryption::Method::AES_128_CTR)
     {
-        //
+        const std::string keyIdString = rawKeyToHex(encryption.iv);
+        const std::string keyString = rawKeyToHex(key);
+        
+        unsigned char keyID[16];
+        unsigned char decryptionKey[16];
+        AP4_ParseHex(keyIdString.c_str(), keyID, 16);
+        AP4_ParseHex(keyString.c_str(), decryptionKey, 16);
+    
+        AP4_ProtectionKeyMap keyMap;
+        keyMap.SetKeyForKid(keyID, decryptionKey, 16);
+    
+        AP4_MemoryByteStream* input = new AP4_MemoryByteStream(reinterpret_cast<unsigned char*>(inputdata), inputbytes);
+        AP4_MemoryByteStream* output = new AP4_MemoryByteStream();
+    
+        AP4_CencDecryptingProcessor decryptionProcessor = AP4_CencDecryptingProcessor(&keyMap);
+    
+        if (AP4_FAILED(decryptionProcessor.Process(*input, *output))) {
+            input->Release();
+            output->Release();
+            return inputbytes;
+        }
+    
+        free(inputdata);
+        inputbytes = output->GetDataSize();
+        inputdata = malloc(inputbytes);
+        memcpy(inputdata, output->GetData(), inputbytes);
+    
+        input->Release();
+        output->Release();
     }
     else
 #endif
