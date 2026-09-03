@@ -42,6 +42,44 @@ using namespace adaptive::encryption;
 
 namespace
 {
+    class AP4_EditingProcessor final : public AP4_Processor {
+    private:
+        void* operator new(size_t);          // standard new
+        void* operator new(size_t, void*);   // placement new
+        void* operator new[](size_t);        // array new
+        void* operator new[](size_t, void*); // placement array new
+
+    public:
+        virtual AP4_Result Initialize(AP4_AtomParent& top_level, AP4_ByteStream& stream, ProgressListener* listener) {
+            const AP4_Result result = remove(top_level);
+            if (AP4_FAILED(result)) {
+                return result;
+            }
+
+            return AP4_SUCCESS;
+        }
+        
+
+    private:
+        AP4_Result remove(AP4_AtomParent& top_level) {
+            AP4_Atom* atom = top_level.FindChild(this->atom);
+            if (atom == NULL) {
+                return AP4_FAILURE;
+            }
+            else {
+                atom->Detach();
+                delete atom;
+                return AP4_SUCCESS;
+            }
+        }
+
+    public:
+        const char* atom = "ftyp";
+
+    private:
+        AP4_AtomParent m_TopLevelParent;
+    };
+
     std::string rawKeyToHex(const KeyringKey& key)
     {
         std::ostringstream oss;
@@ -176,24 +214,36 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
         AP4_ProtectionKeyMap keyMap;
         keyMap.SetKeyForKid(keyID, decryptionKey, 16);
     
-        AP4_MemoryByteStream* input = new AP4_MemoryByteStream(reinterpret_cast<unsigned char*>(inputdata), inputbytes);
-        AP4_MemoryByteStream* output = new AP4_MemoryByteStream();
+        AP4_MemoryByteStream* encryptedDataStream = new AP4_MemoryByteStream(reinterpret_cast<unsigned char*>(inputdata), inputbytes);
+        AP4_MemoryByteStream* decryptedDataStream = new AP4_MemoryByteStream();
     
         AP4_CencDecryptingProcessor decryptionProcessor = AP4_CencDecryptingProcessor(&keyMap);
     
-        if (AP4_FAILED(decryptionProcessor.Process(*input, *output))) {
-            input->Release();
-            output->Release();
+        if (AP4_FAILED(decryptionProcessor.Process(*encryptedDataStream, *decryptedDataStream))) {
+            encryptedDataStream->Release();
+            decryptedDataStream->Release();
             return inputbytes;
         }
+
+        encryptedDataStream->Release();
+
+        AP4_EditingProcessor editingProcessor;
+        AP4_MemoryByteStream* modifiedDataStream = new AP4_MemoryByteStream();
+    
+        if (AP4_FAILED(editingProcessor.Process(*decryptedDataStream, *modifiedDataStream))) {
+            decryptedDataStream->Release();
+            modifiedDataStream->Release();
+            return inputbytes;    // FIXME:-
+        }
+
+        decryptedDataStream->Release();
     
         free(inputdata);
-        inputbytes = output->GetDataSize();
+        inputbytes = modifiedDataStream->GetDataSize();
         inputdata = malloc(inputbytes);
-        memcpy(inputdata, output->GetData(), inputbytes);
+        memcpy(inputdata, modifiedDataStream->GetData(), inputbytes);
     
-        input->Release();
-        output->Release();
+        modifiedDataStream->Release();
     }
     else
 #endif
