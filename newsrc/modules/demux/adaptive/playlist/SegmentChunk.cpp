@@ -29,11 +29,27 @@
 #include <vlc_block.h>
 
 #include <cassert>
+#include <iostream>
 #include <fstream>
 
 using namespace adaptive::playlist;
 using namespace adaptive::encryption;
 using namespace adaptive;
+
+
+namespace
+{
+    void writeToLog(const std::string& text)
+    {
+        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+        if (logfile.is_open())
+        {
+            logfile << text << std::endl;
+            logfile.flush();
+            logfile.close();
+        }
+    }
+}
 
 SegmentChunk::SegmentChunk(AbstractChunkSource *source, BaseRepresentation *rep_) :
     AbstractChunk(source)
@@ -58,29 +74,44 @@ bool SegmentChunk::decrypt(block_t **pp_block)
         const bool b_last = !hasMoreData();
         if ( encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_128_CTR && source->getChunkType() == adaptive::http::ChunkType::Segment )
         {
+            writeToLog("1");
             std::streampos size;
             const std::string path = "I:/" + rep->getID().str() + ".mp4";
             std::ifstream file (path, std::ios::in|std::ios::binary|std::ios::ate);
             if (file.is_open())
             {
+                writeToLog("2");
                 size = file.tellg();
                 const size_t finalSize = static_cast<size_t>(size) + p_block->i_buffer;
                 void* inputdatatemp = malloc(p_block->i_buffer);
+                writeToLog("3");
                 const size_t originalSize = p_block->i_buffer;
                 memcpy(inputdatatemp, p_block->p_buffer, p_block->i_buffer);
+                writeToLog("4");
                 free(p_block->p_buffer);
+                writeToLog("5");
                 p_block->p_buffer = (uint8_t*)malloc(finalSize);
+                writeToLog("6");
                 p_block->i_buffer = finalSize;
                 file.seekg (0, std::ios::beg);
+                writeToLog("7");
                 file.read((char*)p_block->p_buffer, size);
+                writeToLog("8");
                 file.close();
+                writeToLog("9");
     
                 memcpy((void*)p_block->p_buffer + static_cast<int>(size), inputdatatemp, originalSize);
+                writeToLog("10");
                 free(inputdatatemp);
+                writeToLog("11");
             }
+            else
+                writeToLog("ERROR: Can't open file " + path);
         }
+        writeToLog("12");
         p_block->i_buffer = encryptionSession->decrypt(p_block->p_buffer,
                                                        p_block->i_buffer, b_last);
+        writeToLog("13");
         if(b_last)
             encryptionSession->close();
     }
