@@ -72,10 +72,10 @@ bool SegmentChunk::decrypt(block_t **pp_block)
                 p_block->p_buffer = (uint8_t*)malloc(finalSize);
                 p_block->i_buffer = finalSize;
                 file.seekg (0, std::ios::beg);
-                file.read (p_block->p_buffer, size);
+                file.read((char*)p_block->p_buffer, size);
                 file.close();
     
-                memcpy(p_block->p_buffer + static_cast<int>(size), inputdatatemp, originalSize);
+                memcpy((void*)p_block->p_buffer + static_cast<int>(size), inputdatatemp, originalSize);
                 free(inputdatatemp);
             }
         }
