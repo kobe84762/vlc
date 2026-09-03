@@ -46,7 +46,8 @@ BaseRepresentation::BaseRepresentation( BaseAdaptationSet *set ) :
                 CommonAttributesElements( set ),
                 SegmentInformation( set ),
                 adaptationSet   ( set ),
-                bandwidth       (0)
+                bandwidth       (0),
+                firstSegmentModified(false)
 {
 }
 
