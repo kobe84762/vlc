@@ -101,14 +101,25 @@ bool SegmentChunk::decrypt(block_t **pp_block)
                 writeToLog("10");
                 block_Release(inputdatatemp);
                 writeToLog("11");
+                p_block->i_buffer = encryptionSession->decrypt(p_block->p_buffer,
+                                                       p_block->i_buffer, b_last);
+                writeToLog("12");
+                if (rep->getID().str() == "0")
+                {
+                    std::ofstream videoFile ("I:/video.mp4", std::ios::out | std::ios::app | std::ios::binary);
+                    if (!videoFile.is_open())
+                    {
+                        writeToLog("ERROR: Can't open output video file.");
+                        return false;
+                    }
+                    videoFile.write(reinterpret_cast<char*>(p_block->p_buffer), p_block->i_buffer);
+                    videoFile.close();
+                }
             }
             else
                 writeToLog("ERROR: Can't open file " + path);
         }
-        writeToLog("12");
-        p_block->i_buffer = encryptionSession->decrypt(p_block->p_buffer,
-                                                       p_block->i_buffer, b_last);
-        writeToLog("13");
+        
         if(b_last)
             encryptionSession->close();
     }
