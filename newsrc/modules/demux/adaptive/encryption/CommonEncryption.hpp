@@ -56,7 +56,7 @@ namespace adaptive
                 bool start(SharedResources *, const CommonEncryption &);
                 void close();
                 size_t decrypt(void *, size_t, bool);
-                void decrypt(block_t **pp_block);
+                void decrypt(block_t **pp_block, const bool removeAtom);
                 CommonEncryption::Method getEncryptionMethod() const { return encryption.method; }
 
             private:
