@@ -54,7 +54,30 @@ bool SegmentChunk::decrypt(block_t **pp_block)
 
     if(encryptionSession)
     {
-        bool b_last = !hasMoreData();
+        const bool b_last = !hasMoreData();
+        if ( encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_128_CTR && source->getChunkType() == adaptive::http::ChunkType::Segment )
+        {
+            std::streampos size;
+            const std::string path = "I:/" + rep->getID().str() + ".mp4";
+            std::ifstream file (path, std::ios::in|std::ios::binary|std::ios::ate);
+            if (file.is_open())
+            {
+                size = file.tellg();
+                const size_t finalSize = static_cast<size_t>(size) + p_block->i_buffer;
+                void* inputdatatemp = malloc(p_block->i_buffer);
+                const size_t originalSize = p_block->i_buffer;
+                memcpy(inputdatatemp, p_block->p_buffer, p_block->i_buffer);
+                free(p_block->p_buffer);
+                p_block->p_buffer = malloc(finalSize);
+                p_block->i_buffer = finalSize;
+                file.seekg (0, std::ios::beg);
+                file.read (p_block->p_buffer, size);
+                file.close();
+    
+                memcpy(p_block->p_buffer + static_cast<int>(size), inputdatatemp, originalSize);
+                free(inputdatatemp);
+            }
+        }
         p_block->i_buffer = encryptionSession->decrypt(p_block->p_buffer,
                                                        p_block->i_buffer, b_last);
         if(b_last)
