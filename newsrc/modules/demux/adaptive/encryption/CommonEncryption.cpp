@@ -27,6 +27,7 @@
 #include "Keyring.hpp"
 #include "../SharedResources.hpp"
 
+#include <vlc_block.h>
 #include <vlc_common.h>
 #include <vlc_strings.h>
 
@@ -201,50 +202,6 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
             }
         }
     }
-    else if(encryption.method == CommonEncryption::Method::AES_128_CTR)
-    {
-        const std::string keyIdString = rawKeyToHex(encryption.iv);
-        const std::string keyString = rawKeyToHex(key);
-        
-        unsigned char keyID[16];
-        unsigned char decryptionKey[16];
-        AP4_ParseHex(keyIdString.c_str(), keyID, 16);
-        AP4_ParseHex(keyString.c_str(), decryptionKey, 16);
-    
-        AP4_ProtectionKeyMap keyMap;
-        keyMap.SetKeyForKid(keyID, decryptionKey, 16);
-    
-        AP4_MemoryByteStream* encryptedDataStream = new AP4_MemoryByteStream(reinterpret_cast<unsigned char*>(inputdata), inputbytes);
-        AP4_MemoryByteStream* decryptedDataStream = new AP4_MemoryByteStream();
-    
-        AP4_CencDecryptingProcessor decryptionProcessor = AP4_CencDecryptingProcessor(&keyMap);
-    
-        if (AP4_FAILED(decryptionProcessor.Process(*encryptedDataStream, *decryptedDataStream))) {
-            encryptedDataStream->Release();
-            decryptedDataStream->Release();
-            return inputbytes;
-        }
-
-        encryptedDataStream->Release();
-
-        AP4_EditingProcessor editingProcessor;
-        AP4_MemoryByteStream* modifiedDataStream = new AP4_MemoryByteStream();
-    
-        if (AP4_FAILED(editingProcessor.Process(*decryptedDataStream, *modifiedDataStream))) {
-            decryptedDataStream->Release();
-            modifiedDataStream->Release();
-            return inputbytes;    // FIXME:-
-        }
-
-        decryptedDataStream->Release();
-    
-        free(inputdata);
-        inputbytes = modifiedDataStream->GetDataSize();
-        inputdata = malloc(inputbytes);
-        memcpy(inputdata, modifiedDataStream->GetData(), inputbytes);
-    
-        modifiedDataStream->Release();
-    }
     else
 #endif
     if(encryption.method != CommonEncryption::Method::None)
@@ -253,4 +210,62 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     }
 
     return inputbytes;
+}
+
+void CommonEncryptionSession::decrypt(block_t **pp_block)
+{
+    block_t *p_block = *pp_block;
+    const std::string keyIdString = rawKeyToHex(encryption.iv);
+    const std::string keyString = rawKeyToHex(key);
+    
+    unsigned char keyID[16];
+    unsigned char decryptionKey[16];
+    AP4_ParseHex(keyIdString.c_str(), keyID, 16);
+    AP4_ParseHex(keyString.c_str(), decryptionKey, 16);
+
+    AP4_ProtectionKeyMap keyMap;
+    keyMap.SetKeyForKid(keyID, decryptionKey, 16);
+
+    AP4_MemoryByteStream* encryptedDataStream = new AP4_MemoryByteStream(p_block->p_buffer, p_block->i_buffer);
+    AP4_MemoryByteStream* decryptedDataStream = new AP4_MemoryByteStream();
+
+    AP4_CencDecryptingProcessor decryptionProcessor = AP4_CencDecryptingProcessor(&keyMap);
+
+    if (AP4_FAILED(decryptionProcessor.Process(*encryptedDataStream, *decryptedDataStream))) {
+        encryptedDataStream->Release();
+        decryptedDataStream->Release();
+        return;
+    }
+
+    encryptedDataStream->Release();
+
+    block_Release(p_block);
+    p_block = block_Alloc(decryptedDataStream->GetDataSize());
+    memcpy(p_block->p_buffer, decryptedDataStream->GetData(), decryptedDataStream->GetDataSize());
+    decryptedDataStream->Release();
+    
+    /*
+    free(inputdata);
+    inputbytes = modifiedDataStream->GetDataSize();
+    inputdata = malloc(inputbytes);
+    memcpy(inputdata, modifiedDataStream->GetData(), inputbytes);
+
+    AP4_EditingProcessor editingProcessor;
+    AP4_MemoryByteStream* modifiedDataStream = new AP4_MemoryByteStream();
+
+    if (AP4_FAILED(editingProcessor.Process(*decryptedDataStream, *modifiedDataStream))) {
+        decryptedDataStream->Release();
+        modifiedDataStream->Release();
+        return inputbytes;    // FIXME:-
+    }
+
+    decryptedDataStream->Release();
+
+    free(inputdata);
+    inputbytes = modifiedDataStream->GetDataSize();
+    inputdata = malloc(inputbytes);
+    memcpy(inputdata, modifiedDataStream->GetData(), inputbytes);
+
+    modifiedDataStream->Release();
+    */
 }
