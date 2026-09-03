@@ -87,6 +87,8 @@ namespace adaptive
                 bool getMediaPlaybackRange(vlc_tick_t *rangeBegin,
                                                                vlc_tick_t *rangeEnd,
                                                                vlc_tick_t *rangeLength) const;
+
+                bool firstSegmentModified;
             protected:
                 virtual CodecDescription * makeCodecDescription(const std::string &) const;
                 virtual bool        validateCodec(const std::string &) const;
