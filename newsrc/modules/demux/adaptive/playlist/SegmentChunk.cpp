@@ -29,6 +29,7 @@
 #include <vlc_block.h>
 
 #include <cassert>
+#include <fstream>
 
 using namespace adaptive::playlist;
 using namespace adaptive::encryption;
@@ -68,7 +69,7 @@ bool SegmentChunk::decrypt(block_t **pp_block)
                 const size_t originalSize = p_block->i_buffer;
                 memcpy(inputdatatemp, p_block->p_buffer, p_block->i_buffer);
                 free(p_block->p_buffer);
-                p_block->p_buffer = malloc(finalSize);
+                p_block->p_buffer = (uint8_t*)malloc(finalSize);
                 p_block->i_buffer = finalSize;
                 file.seekg (0, std::ios::beg);
                 file.read (p_block->p_buffer, size);
