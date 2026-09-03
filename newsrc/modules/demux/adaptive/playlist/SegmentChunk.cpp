@@ -83,16 +83,13 @@ bool SegmentChunk::decrypt(block_t **pp_block)
                 writeToLog("2");
                 size = file.tellg();
                 const size_t finalSize = static_cast<size_t>(size) + p_block->i_buffer;
-                void* inputdatatemp = malloc(p_block->i_buffer);
                 writeToLog("3");
-                const size_t originalSize = p_block->i_buffer;
-                memcpy(inputdatatemp, p_block->p_buffer, p_block->i_buffer);
+                block_t *inputdatatemp = block_Duplicate(p_block);
                 writeToLog("4");
-                free(p_block->p_buffer);
+                block_Release(p_block);
                 writeToLog("5");
-                p_block->p_buffer = (uint8_t*)malloc(finalSize);
+                p_block = block_Alloc(finalSize);
                 writeToLog("6");
-                p_block->i_buffer = finalSize;
                 file.seekg (0, std::ios::beg);
                 writeToLog("7");
                 file.read((char*)p_block->p_buffer, size);
@@ -100,9 +97,9 @@ bool SegmentChunk::decrypt(block_t **pp_block)
                 file.close();
                 writeToLog("9");
     
-                memcpy((void*)p_block->p_buffer + static_cast<int>(size), inputdatatemp, originalSize);
+                memcpy((void*)p_block->p_buffer + static_cast<int>(size), inputdatatemp->p_buffer, inputdatatemp->i_buffer);
                 writeToLog("10");
-                free(inputdatatemp);
+                block_Release(inputdatatemp);
                 writeToLog("11");
             }
             else
