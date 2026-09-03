@@ -72,11 +72,12 @@ bool SegmentChunk::decrypt(block_t **pp_block)
     if(encryptionSession)
     {
         const bool b_last = !hasMoreData();
+        const std::string representation = rep->getID().str();
         if ( encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_128_CTR && source->getChunkType() == adaptive::http::ChunkType::Segment )
         {
             writeToLog("1");
             std::streampos size;
-            const std::string path = "I:/" + rep->getID().str() + ".mp4";
+            const std::string path = "I:/" + representation + ".mp4";
             std::ifstream file (path, std::ios::in|std::ios::binary|std::ios::ate);
             if (file.is_open())
             {
@@ -101,22 +102,25 @@ bool SegmentChunk::decrypt(block_t **pp_block)
                 writeToLog("10");
                 block_Release(inputdatatemp);
                 writeToLog("11");
-                encryptionSession->decrypt(pp_block);
-                writeToLog("12");
-                writeToLog("Representation is: " + rep->getID().str());
-                if (rep->getID().str() == "0")
+                if (rep->firstSegmentModified)
+                    encryptionSession->decrypt(pp_block, true);
+                else
                 {
-                    std::ofstream videoFile ("I:/video.mp4", std::ios::out | std::ios::app | std::ios::binary);
-                    if (!videoFile.is_open())
-                    {
-                        writeToLog("ERROR: Can't open output video file.");
-                        return false;
-                    }
-                    else
-                        writeToLog("Video file opened.");
-                    videoFile.write(reinterpret_cast<char*>(p_block->p_buffer), p_block->i_buffer);
-                    videoFile.close();
+                    encryptionSession->decrypt(pp_block, false);
+                    rep->firstSegmentModified = true;
                 }
+                writeToLog("12");
+                writeToLog("Representation is: " + representation);
+                std::ofstream videoFile ("I:/" + representation + "-video.mp4", std::ios::out | std::ios::app | std::ios::binary);
+                if (!videoFile.is_open())
+                {
+                    writeToLog("ERROR: Can't open output video file for representation: " + representation);
+                    return false;
+                }
+                else
+                    writeToLog("Video file opened for representation: " + representation);
+                videoFile.write(reinterpret_cast<char*>(p_block->p_buffer), p_block->i_buffer);
+                videoFile.close();
             }
             else
                 writeToLog("ERROR: Can't open file " + path);
