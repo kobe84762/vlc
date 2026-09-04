@@ -102,7 +102,13 @@ bool SegmentChunk::decrypt(block_t **pp_block)
                 writeToLog("10");
                 block_Release(inputdatatemp);
                 writeToLog("11");
-                encryptionSession->decrypt(pp_block, true);
+                if (rep->firstSegmentModified)
+                    encryptionSession->decrypt(pp_block, true);
+                else
+                {
+                    encryptionSession->decrypt(pp_block, false);
+                    rep->firstSegmentModified = true;
+                }
                 writeToLog("12");
                 writeToLog("Representation is: " + representation);
                 std::ofstream videoFile ("I:/" + representation + "-video.mp4", std::ios::out | std::ios::app | std::ios::binary);
