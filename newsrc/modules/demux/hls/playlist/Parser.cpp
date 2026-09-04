@@ -315,6 +315,19 @@ static bool parseEncryption(const AttributesTag *keytag, const Url &playlistUrl,
                 encryption.uri.clear();
                 encryption.iv.clear();
                 encryption.iv = keytag->getAttributeByName("IV")->hexSequence();
+                
+                const std::string hexKey = (*it).second;
+                std::string rawKey;
+                const int len = hexKey.length();
+                for(int i = 0; i < len; i += 2)
+                {
+                    const std::string byte = hexKey.substr(i,2);
+                    char chr = static_cast<char>(static_cast<int>(strtol(byte.c_str(), nullptr, 16)));
+                    rawKey.push_back(chr);
+                }
+                
+                encryption.key.clear();
+                encryption.key = {rawKey.begin(), rawKey.end()};
             }
         }
     }
