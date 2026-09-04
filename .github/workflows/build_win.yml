@@ -24,16 +24,31 @@ jobs:
           sudo apt update
           sudo apt install autopoint gcc-mingw-w64-x86-64 gettext g++-mingw-w64-x86-64 mingw-w64-tools yasm
 
+      - name: Download and add Bento4 source code
+        run: |
+          git clone --depth 1 -b master https://github.com/axiomatic-systems/Bento4
+          cp -r Bento4/Source/C++/Core/. newsrc/modules/demux/adaptive/encryption
+          cp -r Bento4/Source/C++/Codecs/. newsrc/modules/demux/adaptive/encryption
+          cp -r Bento4/Source/C++/Crypto/. newsrc/modules/demux/adaptive/encryption
+          cp -r Bento4/Source/C++/MetaData/. newsrc/modules/demux/adaptive/encryption
+          
       - name: Copy modified source code to VLC
         run: cp -R ${{ github.workspace }}/newsrc/* ${{ github.workspace }}/vlc
 
+      - name: Add Bento4 source code to build systems
+        run: |
+          cd vlc/modules/demux/adaptive/encryption
+          for FILE in Ap4*;
+            do sed -i "/Keyring.hpp/a \    demux/adaptive/encryption/$FILE \\\\" ${{ github.workspace }}/vlc/modules/demux/Makefile.am;
+            sed -i "/Keyring.hpp/a \        'adaptive/encryption/$FILE'," ${{ github.workspace }}/vlc/modules/demux/meson.build;
+          done
+          
       - name: Compile LibVLC
         run: |
           mkdir vlc-installed
           mkdir build
           cd build
-          CONFIGFLAGS="--enable-merge-ffmpeg LTCFLAGS=-O0 \
-          --disable-sout --disable-lua --disable-vlm --disable-archive --disable-live555 --disable-dc1394 --disable-dv1394 --disable-linsys \
+          CONFIGFLAGS="--disable-sout --disable-lua --disable-vlm --disable-archive --disable-live555 --disable-dc1394 --disable-dv1394 --disable-linsys \
           --disable-dvdread --disable-dvdnav --disable-bluray --disable-opencv --disable-smbclient --disable-dsm --disable-sftp --disable-nfs --disable-smb2 --disable-v4l2 --disable-amf-scaler \
           --disable-amf-enhancer --disable-amf-frc --disable-decklink --disable-vcd --disable-vnc --disable-freerdp --disable-asdcp --disable-dvbpsi --disable-dvbcsa --disable-gme --disable-sid \
           --disable-ogg --disable-shout --disable-matroska --disable-mod --disable-mpc --disable-shine --disable-omxil --disable-rpi-omxil --disable-mad --disable-mpg123 --disable-gst-decode \
