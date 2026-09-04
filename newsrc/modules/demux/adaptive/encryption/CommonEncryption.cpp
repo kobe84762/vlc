@@ -212,7 +212,7 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     return inputbytes;
 }
 
-void CommonEncryptionSession::decrypt(block_t **pp_block)
+void CommonEncryptionSession::decrypt(block_t **pp_block, const bool removeAtom)
 {
     block_t *p_block = *pp_block;
     const std::string keyIdString = rawKeyToHex(encryption.iv);
@@ -239,33 +239,28 @@ void CommonEncryptionSession::decrypt(block_t **pp_block)
 
     encryptedDataStream->Release();
 
-    block_Release(p_block);
-    p_block = block_Alloc(decryptedDataStream->GetDataSize());
-    memcpy(p_block->p_buffer, decryptedDataStream->GetData(), decryptedDataStream->GetDataSize());
-    decryptedDataStream->Release();
+    if ( !removeAtom )
+    {
+        block_Release(p_block);
+        p_block = block_Alloc(decryptedDataStream->GetDataSize());
+        memcpy(p_block->p_buffer, decryptedDataStream->GetData(), decryptedDataStream->GetDataSize());
+        decryptedDataStream->Release();
+        return;
+    }
     
-    /*
-    free(inputdata);
-    inputbytes = modifiedDataStream->GetDataSize();
-    inputdata = malloc(inputbytes);
-    memcpy(inputdata, modifiedDataStream->GetData(), inputbytes);
-
     AP4_EditingProcessor editingProcessor;
     AP4_MemoryByteStream* modifiedDataStream = new AP4_MemoryByteStream();
 
     if (AP4_FAILED(editingProcessor.Process(*decryptedDataStream, *modifiedDataStream))) {
         decryptedDataStream->Release();
         modifiedDataStream->Release();
-        return inputbytes;    // FIXME:-
+        return;
     }
 
     decryptedDataStream->Release();
-
-    free(inputdata);
-    inputbytes = modifiedDataStream->GetDataSize();
-    inputdata = malloc(inputbytes);
-    memcpy(inputdata, modifiedDataStream->GetData(), inputbytes);
-
+    
+    block_Release(p_block);
+    p_block = block_Alloc(modifiedDataStream->GetDataSize());
+    memcpy(p_block->p_buffer, modifiedDataStream->GetData(), modifiedDataStream->GetDataSize());
     modifiedDataStream->Release();
-    */
 }
