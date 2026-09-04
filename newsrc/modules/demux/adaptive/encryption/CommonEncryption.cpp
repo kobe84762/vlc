@@ -249,18 +249,37 @@ void CommonEncryptionSession::decrypt(block_t **pp_block, const bool removeAtom)
     }
     
     AP4_EditingProcessor editingProcessor;
-    AP4_MemoryByteStream* modifiedDataStream = new AP4_MemoryByteStream();
+    AP4_MemoryByteStream* noFtypDataStream = new AP4_MemoryByteStream();
 
-    if (AP4_FAILED(editingProcessor.Process(*decryptedDataStream, *modifiedDataStream))) {
+    if (AP4_FAILED(editingProcessor.Process(*decryptedDataStream, *noFtypDataStream))) {
         decryptedDataStream->Release();
-        modifiedDataStream->Release();
+        noFtypDataStream->Release();
         return;
     }
 
     decryptedDataStream->Release();
+
+    AP4_EditingProcessor moovEditingProcessor;
+    moovEditingProcessor.atom = "moov";
+    AP4_MemoryByteStream* noMoovDataStream = new AP4_MemoryByteStream();
+    if (AP4_FAILED(moovEditingProcessor.Process(*noFtypDataStream, *noMoovDataStream))) {
+        noFtypDataStream->Release();
+        noMoovDataStream->Release();
+        return;
+    }
+    
+    noFtypDataStream->Release();
+
+    /*
+    if (noMoovDataStream->GetDataSize() == 0)
+    {
+        noMoovDataStream->Release();
+        return;
+    }
+    */
     
     block_Release(p_block);
-    p_block = block_Alloc(modifiedDataStream->GetDataSize());
-    memcpy(p_block->p_buffer, modifiedDataStream->GetData(), modifiedDataStream->GetDataSize());
-    modifiedDataStream->Release();
+    p_block = block_Alloc(noMoovDataStream->GetDataSize());
+    memcpy(p_block->p_buffer, noMoovDataStream->GetData(), noMoovDataStream->GetDataSize());
+    noMoovDataStream->Release();
 }
