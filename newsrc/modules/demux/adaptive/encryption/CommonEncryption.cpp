@@ -239,6 +239,15 @@ void CommonEncryptionSession::decrypt(block_t **pp_block, const bool removeAtom)
 
     encryptedDataStream->Release();
 
+    if (!removeAtom)
+    {
+        block_Release(p_block);
+        p_block = block_Alloc(decryptedDataStream->GetDataSize());
+        memcpy(p_block->p_buffer, decryptedDataStream->GetData(), decryptedDataStream->GetDataSize());
+        decryptedDataStream->Release();
+        return;
+    }
+
     // parse the atoms
     AP4_AtomParent top_level;
     AP4_Atom* atom;
@@ -256,17 +265,6 @@ void CommonEncryptionSession::decrypt(block_t **pp_block, const bool removeAtom)
 
     // create the output stream
     AP4_MemoryByteStream* modifiedDataStream = new AP4_MemoryByteStream();
-
-    // write the atom
-    atom->Write(*modifiedDataStream);
-
-    // find the atom
-    atom = top_level.FindChild("moof");
-    if (atom == NULL) {
-        decryptedDataStream->Release();
-        modifiedDataStream->Release();
-        return;
-    }
 
     // write the atom
     atom->Write(*modifiedDataStream);
