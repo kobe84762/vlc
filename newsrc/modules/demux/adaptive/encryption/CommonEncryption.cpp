@@ -248,7 +248,7 @@ void CommonEncryptionSession::decrypt(block_t **pp_block, const bool removeAtom)
     }
 
     // find the atom
-    atom = top_level.FindChild("moof");
+    atom = top_level.FindChild("mdat");
     if (atom == NULL) {
         decryptedDataStream->Release();
         return;
@@ -261,7 +261,7 @@ void CommonEncryptionSession::decrypt(block_t **pp_block, const bool removeAtom)
     atom->Write(*modifiedDataStream);
 
     // find the atom
-    atom = top_level.FindChild("mdat");
+    atom = top_level.FindChild("moof");
     if (atom == NULL) {
         decryptedDataStream->Release();
         modifiedDataStream->Release();
