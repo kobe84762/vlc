@@ -45,6 +45,8 @@
 #include <cctype>
 #include <algorithm>
 #include <limits>
+#include <fstream>
+#include <iostream>
 
 using namespace adaptive;
 using namespace adaptive::playlist;
@@ -66,6 +68,17 @@ namespace
         tokens.push_back(s);
     
         return tokens;
+    }
+
+    void writeToLog(const std::string& text)
+    {
+        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+        if (logfile.is_open())
+        {
+            logfile << text << std::endl;
+            logfile.flush();
+            logfile.close();
+        }
     }
 }
 
@@ -296,14 +309,17 @@ static bool parseEncryption(const AttributesTag *keytag, const Url &playlistUrl,
         if (keyId.size() == 34 && keyId.rfind("0x", 0) == 0)
             keyId.erase(0, 2);
         std::transform(keyId.begin(), keyId.end(), keyId.begin(), [](unsigned char c){ return std::tolower(c); });
+        writeToLog("Found key ID: " + keyId);
 
         if( std::map<std::string, std::string>::iterator it = customKeys.find(keyId); it != customKeys.end() )
         {
             encryption.method = CommonEncryption::Method::AES_128;
             encryption.uri.clear();
+            encryption.iv.clear();
             encryption.iv = keytag->getAttributeByName("IV")->hexSequence();
             
             const std::string hexKey = (*it).second;
+            writeToLog("Found key: " + hexKey);
             std::string rawKey;
             const int len = hexKey.length();
             for(int i = 0; i < len; i += 2)
@@ -312,8 +328,10 @@ static bool parseEncryption(const AttributesTag *keytag, const Url &playlistUrl,
                 char chr = static_cast<char>(static_cast<int>(strtol(byte.c_str(), nullptr, 16)));
                 rawKey.push_back(chr);
             }
-            
+
+            encryption.key.clear();
             encryption.key = {rawKey.begin(), rawKey.end()};
+            writeToLog("Raw key size: " + std::to_string(encryption.key.size()));
         }
     }
     else
@@ -535,10 +553,12 @@ M3U8 * M3U8Parser::parse(vlc_object_t *p_object, stream_t *p_stream, const std::
         std::string keys = std::string(decryptionKeys);
         free(decryptionKeys);
         const std::vector<std::string> keyPairs = splitString(keys, ";");
+        writeToLog("Decryption keys:");
         for (std::string keyPair : keyPairs)
         {
             const std::vector<std::string> key = splitString(keyPair, ":");
             customKeys.emplace(key.front(), key.back());
+            writeToLog(key.front() + ":" + key.back());
         }
     }
 
