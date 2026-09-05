@@ -28,12 +28,29 @@
 
 #include <vlc_common.h>
 
+#include <fstream>
+#include <iostream>
+
 #ifdef HAVE_GCRYPT
  #include <gcrypt.h>
  #include <vlc_gcrypt.h>
 #endif
 
 using namespace adaptive::encryption;
+
+namespace
+{
+    void writeToLog(const std::string& text)
+    {
+        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+        if (logfile.is_open())
+        {
+            logfile << text << std::endl;
+            logfile.flush();
+            logfile.close();
+        }
+    }
+}
 
 
 CommonEncryption::CommonEncryption()
@@ -74,26 +91,35 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
 #else
     if(encryption.method == CommonEncryption::Method::AES_128)
     {
+        writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) 1");
         if(key.empty())
         {
-            if(!encryption.key.empty())
+            writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) 2");
+            if(!encryption.key.empty()) {
                 key = encryption.key;
+                writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) 3");
+            }
             else if(!encryption.uri.empty())
                 key = res->getKeyring()->getKey(res, encryption.uri);
-            if(key.size() != 16)
+            if(key.size() != 16) {
+                writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) Key size is: " + std::to_string(key.size()));
                 return false;
+            }
         }
 
         vlc_gcrypt_init();
+        writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) 4");
         gcry_cipher_hd_t handle;
         if( gcry_cipher_open(&handle, GCRY_CIPHER_AES, GCRY_CIPHER_MODE_CBC, 0) ||
                 gcry_cipher_setkey(handle, &key[0], 16) ||
                 gcry_cipher_setiv(handle, &encryption.iv[0], 16) )
         {
+            writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) 5");
             gcry_cipher_close(handle);
             ctx = nullptr;
             return false;
         }
+        writeToLog("bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption &enc) 6");
         ctx = handle;
     }
 #endif
@@ -119,13 +145,16 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     gcry_cipher_hd_t handle = reinterpret_cast<gcry_cipher_hd_t>(ctx);
     if(encryption.method == CommonEncryption::Method::AES_128 && ctx)
     {
+        writeToLog("size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool last) 1");
         if ((inputbytes % 16) != 0 || inputbytes < 16 ||
             gcry_cipher_decrypt(handle, inputdata, inputbytes, nullptr, 0))
         {
+            writeToLog("size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool last) 2");
             inputbytes = 0;
         }
         else if(last)
         {
+            writeToLog("size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool last) 3");
             /* last bytes */
             /* remove the PKCS#7 padding from the buffer */
             const uint8_t pad = reinterpret_cast<uint8_t *>(inputdata)[inputbytes - 1];
@@ -137,6 +166,7 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
                     inputbytes -= pad;
             }
         }
+        writeToLog("size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool last) 4");
     }
     else
 #endif
