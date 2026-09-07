@@ -29,6 +29,8 @@ namespace adaptive
 
     namespace encryption
     {
+        void loadCustomKeys();
+
         class CommonEncryption
         {
             public:
@@ -40,6 +42,7 @@ namespace adaptive
                     AES_128,
                     AES_Sample,
                 } method;
+                std::string keyId;
                 std::string uri;
                 std::vector<unsigned char> iv;
         };
