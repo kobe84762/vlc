@@ -42,7 +42,6 @@ namespace adaptive
                 } method;
                 std::string uri;
                 std::vector<unsigned char> iv;
-                std::vector<unsigned char> key;
         };
 
         class CommonEncryptionSession
