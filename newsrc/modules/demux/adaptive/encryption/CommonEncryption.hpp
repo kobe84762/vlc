@@ -58,10 +58,11 @@ namespace adaptive
 
                 bool start(SharedResources *, const CommonEncryption &);
                 void close();
-                size_t decrypt(void *, size_t, bool);
-                void decrypt(block_t**, bool);
+                size_t decrypt(void *, size_t, const bool);
+                void decrypt(block_t **, const bool);
                 CommonEncryption::Method getEncryptionMethod() const { return encryption.method; }
                 bool hasKeyId() const { return !encryption.keyId.empty(); }
+                void setKeyId(const std::string &keyId) { encryption.keyId = keyId; }
 
             private:
                 std::vector<unsigned char> key;
