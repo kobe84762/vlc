@@ -3,11 +3,10 @@
 #include "Ap4.h"
 #include "Ap4Tools.h"
 
-std::string Bento4::getKeyId(block_t **initData) {
+std::string Ap4Tools::getKeyId(block_t **initData) {
 
-    if ((*initData)->i_buffer < 1) {
+    if ((*initData)->i_buffer < 1)
         return { };
-    }
 
     keyId.clear();
 
