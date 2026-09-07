@@ -23,9 +23,8 @@
 #include <vector>
 #include <string>
 
-#include <vlc_objects.h>
-
 typedef struct vlc_frame_t block_t;
+typedef struct vlc_object_t vlc_object_t;
 
 namespace adaptive
 {
