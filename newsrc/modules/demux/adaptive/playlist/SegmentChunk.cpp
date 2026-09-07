@@ -66,7 +66,7 @@ bool SegmentChunk::decrypt(block_t **pp_block)
         else if( encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_Sample )
         {
             if(source->getChunkType() == adaptive::http::ChunkType::Init && !encryptionSession->hasKeyId() )
-                encryptionSession->setKeyId(Ap4Tools::getKeyId(pp_block));
+                encryptionSession->setKeyId(Ap4Tools::getKeyId(p_block->p_buffer, p_block->i_buffer));
             else if(source->getChunkType() == adaptive::http::ChunkType::Segment)
                 encryptionSession->decrypt(pp_block, b_last);
         }
