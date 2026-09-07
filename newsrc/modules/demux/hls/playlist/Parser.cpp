@@ -504,7 +504,13 @@ M3U8 * M3U8Parser::parse(vlc_object_t *p_object, stream_t *p_stream, const std::
     if(!playlist)
         return nullptr;
 
-    adaptive::encryption::loadCustomKeys(p_object);
+    char *decryptionKeys = var_InheritString(p_object, "decryption-keys");
+    if (decryptionKeys)
+    {
+        const std::string keys = std::string(decryptionKeys);
+        free(decryptionKeys);
+        adaptive::encryption::loadCustomKeys(keys);
+    }
 
     if(!playlisturl.empty())
         playlist->setPlaylistUrl( Helper::getDirectoryPath(playlisturl).append("/") );
