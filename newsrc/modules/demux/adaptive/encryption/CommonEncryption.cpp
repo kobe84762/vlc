@@ -76,9 +76,7 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
     {
         if(key.empty())
         {
-            if(!encryption.key.empty())
-                key = encryption.key;
-            else if(!encryption.uri.empty())
+            if(!encryption.uri.empty())
                 key = res->getKeyring()->getKey(res, encryption.uri);
             if(key.size() != 16)
                 return false;
