@@ -28,6 +28,7 @@
 #include "../../adaptive/playlist/BasePeriod.h"
 #include "../../adaptive/playlist/BaseAdaptationSet.h"
 #include "../../adaptive/playlist/SegmentList.h"
+#include "../../adaptive/encryption/CommonEncryption.hpp"
 #include "../../adaptive/encryption/Keyring.hpp"
 #include "../../adaptive/tools/Retrieve.hpp"
 #include "../../adaptive/tools/Helper.h"
