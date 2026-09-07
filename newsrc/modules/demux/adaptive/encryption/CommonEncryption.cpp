@@ -57,20 +57,14 @@ namespace
     }
 }
 
-void loadCustomKeys(vlc_object_t *p_object)
+void loadCustomKeys(std::string keys)
 {
     customKeys.clear();
-    char *decryptionKeys = var_InheritString(p_object, "decryption-keys");
-    if (decryptionKeys)
-    {   
-        std::string keys = std::string(decryptionKeys);
-        free(decryptionKeys);
-        const std::vector<std::string> keyPairs = splitString(keys, ";");
-        for (std::string keyPair : keyPairs)
-        {
-            const std::vector<std::string> key = splitString(keyPair, ":");
-            customKeys.emplace(key.front(), key.back());
-        }
+    const std::vector<std::string> keyPairs = splitString(keys, ";");
+    for (std::string keyPair : keyPairs)
+    {
+        const std::vector<std::string> key = splitString(keyPair, ":");
+        customKeys.emplace(key.front(), key.back());
     }
 }
 
