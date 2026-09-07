@@ -64,7 +64,10 @@ bool SegmentChunk::decrypt(block_t **pp_block)
         }
         else if( encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_Sample )
         {
-            encryptionSession->decrypt(pp_block, b_last);
+            if(source->getChunkType() == adaptive::http::ChunkType::Init && !encryptionSession->hasKeyId() )
+                // FIXME:- Get Key Id
+            else if(source->getChunkType() == adaptive::http::ChunkType::Segment)
+                encryptionSession->decrypt(pp_block, b_last);
         }
     }
 
