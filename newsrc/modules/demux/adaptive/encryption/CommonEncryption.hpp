@@ -61,6 +61,7 @@ namespace adaptive
                 size_t decrypt(void *, size_t, bool);
                 void decrypt(block_t**, bool);
                 CommonEncryption::Method getEncryptionMethod() const { return encryption.method; }
+                bool hasKeyId() const { return !encryption.keyId.empty(); }
 
             private:
                 std::vector<unsigned char> key;
