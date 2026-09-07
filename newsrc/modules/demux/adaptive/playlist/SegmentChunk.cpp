@@ -25,6 +25,7 @@
 #include "Segment.h"
 #include "BaseRepresentation.h"
 #include "../encryption/CommonEncryption.hpp"
+#include "../encryption/Ap4Tools.hpp"
 
 #include <vlc_block.h>
 
@@ -65,7 +66,7 @@ bool SegmentChunk::decrypt(block_t **pp_block)
         else if( encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_Sample )
         {
             if(source->getChunkType() == adaptive::http::ChunkType::Init && !encryptionSession->hasKeyId() )
-                // FIXME:- Get Key Id
+                encryptionSession->setKeyId(Ap4Tools::getKeyId(pp_block));
             else if(source->getChunkType() == adaptive::http::ChunkType::Segment)
                 encryptionSession->decrypt(pp_block, b_last);
         }
