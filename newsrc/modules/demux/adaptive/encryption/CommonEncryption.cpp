@@ -146,7 +146,7 @@ void CommonEncryptionSession::close()
 #endif
 }
 
-size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool last)
+size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, const bool last)
 {
 #ifndef HAVE_GCRYPT
     VLC_UNUSED(inputdata);
@@ -184,7 +184,7 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     return inputbytes;
 }
 
-void CommonEncryptionSession::decrypt(block_t** pp_block, bool last)
+void CommonEncryptionSession::decrypt(block_t** pp_block, const bool last)
 {
     if(encryption.keyId.empty())
         return;
