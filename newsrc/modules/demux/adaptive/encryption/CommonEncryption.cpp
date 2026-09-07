@@ -22,10 +22,12 @@
 # include "config.h"
 #endif
 
+#include "Ap4.h"
 #include "CommonEncryption.hpp"
 #include "Keyring.hpp"
 #include "../SharedResources.hpp"
 
+#include <vlc_block.h>
 #include <vlc_common.h>
 
 #ifdef HAVE_GCRYPT
@@ -180,4 +182,15 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     }
 
     return inputbytes;
+}
+
+void CommonEncryptionSession::decrypt(block_t** pp_block, bool last)
+{
+    if(encryption.keyId.empty())
+        return;
+    
+    if( std::map<std::string, std::string>::iterator it = customKeys.find(encryption.keyId); it == customKeys.end() )
+        return;
+    
+    block_t *p_block = *pp_block;
 }
