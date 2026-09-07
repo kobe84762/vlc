@@ -24,7 +24,6 @@
 #include <string>
 
 typedef struct vlc_frame_t block_t;
-typedef struct vlc_object_t vlc_object_t;
 
 namespace adaptive
 {
@@ -32,7 +31,7 @@ namespace adaptive
 
     namespace encryption
     {
-        void loadCustomKeys(vlc_object_t *p_object);
+        void loadCustomKeys(std::string keys);
 
         class CommonEncryption
         {
