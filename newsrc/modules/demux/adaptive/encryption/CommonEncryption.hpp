@@ -23,12 +23,13 @@
 #include <vector>
 #include <string>
 
+#include <vlc_objects.h>
+
 typedef struct vlc_frame_t block_t;
 
 namespace adaptive
 {
     class SharedResources;
-    struct vlc_object_t;
 
     namespace encryption
     {
