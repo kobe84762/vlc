@@ -198,31 +198,31 @@ void CommonEncryptionSession::decrypt(block_t** pp_block, const bool last)
     
     block_t *p_block = *pp_block;
 
-	unsigned char keyID[16];
-	unsigned char decryptionKey[16];
-	AP4_ParseHex(encryption.keyId.c_str(), keyID, 16);
-	AP4_ParseHex(hexKey.c_str(), decryptionKey, 16);
+    unsigned char keyID[16];
+    unsigned char decryptionKey[16];
+    AP4_ParseHex(encryption.keyId.c_str(), keyID, 16);
+    AP4_ParseHex(hexKey.c_str(), decryptionKey, 16);
 
-	AP4_ProtectionKeyMap keyMap;
-	keyMap.SetKeyForKid(keyID, decryptionKey, 16);
+    AP4_ProtectionKeyMap keyMap;
+    keyMap.SetKeyForKid(keyID, decryptionKey, 16);
 
-	AP4_MemoryByteStream* input = new AP4_MemoryByteStream(p_block->p_buffer, p_block->i_buffer);
-	AP4_MemoryByteStream* output = new AP4_MemoryByteStream();
+    AP4_MemoryByteStream* input = new AP4_MemoryByteStream(p_block->p_buffer, p_block->i_buffer);
+    AP4_MemoryByteStream* output = new AP4_MemoryByteStream();
 
-	AP4_CencDecryptingProcessor processor = AP4_CencDecryptingProcessor(&keyMap);
+    AP4_CencDecryptingProcessor processor = AP4_CencDecryptingProcessor(&keyMap);
 
-	if (AP4_FAILED(processor.Process(*input, *output))) {
-		input->Release();
-		output->Release();
-		return;
-	}
+    if (AP4_FAILED(processor.Process(*input, *output))) {
+        input->Release();
+        output->Release();
+        return;
+    }
 
-	block_Release(p_block);
+    block_Release(p_block);
     p_block = block_Alloc(output->GetDataSize());
     if (p_block == NULL)
         return;
-	memcpy(p_block->p_buffer, output->GetData(), p_block->i_buffer);
+    memcpy(p_block->p_buffer, output->GetData(), p_block->i_buffer);
 
-	input->Release();
-	output->Release();
+    input->Release();
+    output->Release();
 }
