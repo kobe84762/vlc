@@ -26,10 +26,11 @@
 namespace adaptive
 {
     class SharedResources;
+    struct vlc_object_t;
 
     namespace encryption
     {
-        void loadCustomKeys();
+        void loadCustomKeys(vlc_object_t *p_object);
 
         class CommonEncryption
         {
