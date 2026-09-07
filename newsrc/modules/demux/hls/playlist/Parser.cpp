@@ -50,25 +50,6 @@ using namespace adaptive;
 using namespace adaptive::playlist;
 using namespace hls::playlist;
 
-namespace
-{
-    std::map<std::string, std::string> customKeys;
-
-    std::vector<std::string> splitString(std::string& s, const std::string& delimiter) {
-        std::vector<std::string> tokens;
-        size_t pos = 0;
-        std::string token;
-        while ((pos = s.find(delimiter)) != std::string::npos) {
-            token = s.substr(0, pos);
-            tokens.push_back(token);
-            s.erase(0, pos + delimiter.length());
-        }
-        tokens.push_back(s);
-    
-        return tokens;
-    }
-}
-
 M3U8Parser::M3U8Parser(SharedResources *res)
 {
     resources = res;
@@ -271,6 +252,7 @@ static bool parseEncryption(const AttributesTag *keytag, const Url &playlistUrl,
         keytag->getAttributeByName("URI") )
     {
         encryption.method = CommonEncryption::Method::AES_128;
+        encryption.keyId.clear();
         encryption.uri.clear();
 
         Url keyurl(keytag->getAttributeByName("URI")->quotedString());
@@ -283,44 +265,38 @@ static bool parseEncryption(const AttributesTag *keytag, const Url &playlistUrl,
 
         if(keytag->getAttributeByName("IV"))
         {
+            encryption.iv.clear();
             encryption.iv = keytag->getAttributeByName("IV")->hexSequence();
         }
         return true;
     }
-    else if ( keytag->getAttributeByName("METHOD") &&
-        keytag->getAttributeByName("METHOD")->value == "SAMPLE-AES" &&
-        keytag->getAttributeByName("KEYID") &&
-        keytag->getAttributeByName("IV") )
+    else if( keytag->getAttributeByName("METHOD") &&
+        keytag->getAttributeByName("METHOD")->value == "SAMPLE-AES" )
     {
-        std::string keyId = keytag->getAttributeByName("KEYID")->value;
-        if (keyId.size() == 34 && keyId.rfind("0x", 0) == 0)
-            keyId.erase(0, 2);
-        std::transform(keyId.begin(), keyId.end(), keyId.begin(), [](unsigned char c){ return std::tolower(c); });
-
-        if( std::map<std::string, std::string>::iterator it = customKeys.find(keyId); it != customKeys.end() )
+        encryption.method = CommonEncryption::Method::AES_Sample;
+        encryption.uri.clear();
+        encryption.keyId.clear();
+        if(keytag->getAttributeByName("KEYID"))
         {
-            encryption.method = CommonEncryption::Method::AES_128;
-            encryption.uri.clear();
-            encryption.iv = keytag->getAttributeByName("IV")->hexSequence();
-            
-            const std::string hexKey = (*it).second;
-            std::string rawKey;
-            const int len = hexKey.length();
-            for(int i = 0; i < len; i += 2)
-            {
-                const std::string byte = hexKey.substr(i,2);
-                char chr = static_cast<char>(static_cast<int>(strtol(byte.c_str(), nullptr, 16)));
-                rawKey.push_back(chr);
-            }
-            
-            encryption.key = {rawKey.begin(), rawKey.end()};
+            std::string keyId = keytag->getAttributeByName("KEYID")->value;
+            if (keyId.size() == 34 && keyId.rfind("0x", 0) == 0)
+                keyId.erase(0, 2);
+            std::transform(keyId.begin(), keyId.end(), keyId.begin(), [](unsigned char c){ return std::tolower(c); });
+            encryption.keyId = keyId;
         }
+        if(keytag->getAttributeByName("IV"))
+        {
+            encryption.iv.clear();
+            encryption.iv = keytag->getAttributeByName("IV")->hexSequence();
+        }
+        return true;
     }
     else
     {
         /* unsupported or invalid */
         encryption.method = CommonEncryption::Method::None;
         encryption.uri.clear();
+        encryption.keyId.clear();
         encryption.iv.clear();
         return false;
     }
@@ -528,19 +504,7 @@ M3U8 * M3U8Parser::parse(vlc_object_t *p_object, stream_t *p_stream, const std::
     if(!playlist)
         return nullptr;
 
-    customKeys.clear();
-    char *decryptionKeys = var_InheritString(p_object, "decryption-keys");
-    if (decryptionKeys)
-    {   
-        std::string keys = std::string(decryptionKeys);
-        free(decryptionKeys);
-        const std::vector<std::string> keyPairs = splitString(keys, ";");
-        for (std::string keyPair : keyPairs)
-        {
-            const std::vector<std::string> key = splitString(keyPair, ":");
-            customKeys.emplace(key.front(), key.back());
-        }
-    }
+    adaptive::encryption::loadCustomKeys(p_object);
 
     if(!playlisturl.empty())
         playlist->setPlaylistUrl( Helper::getDirectoryPath(playlisturl).append("/") );
