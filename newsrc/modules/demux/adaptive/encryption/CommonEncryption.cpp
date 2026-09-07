@@ -186,11 +186,43 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, cons
 
 void CommonEncryptionSession::decrypt(block_t** pp_block, const bool last)
 {
-    if(encryption.keyId.empty())
+    if(encryption.keyId.size() != 32)
         return;
     
-    if( std::map<std::string, std::string>::iterator it = customKeys.find(encryption.keyId); it == customKeys.end() )
+    std::string hexKey;
+    if( std::map<std::string, std::string>::iterator it = customKeys.find(encryption.keyId); it != customKeys.end() )
+        hexKey = (*it).second;
+    
+    if(hexKey.size() != 32)
         return;
     
     block_t *p_block = *pp_block;
+
+	unsigned char keyID[16];
+	unsigned char decryptionKey[16];
+	AP4_ParseHex(encryption.keyId.c_str(), keyID, 16);
+	AP4_ParseHex(hexKey.c_str(), decryptionKey, 16);
+
+	AP4_ProtectionKeyMap keyMap;
+	keyMap.SetKeyForKid(keyID, decryptionKey, 16);
+
+	AP4_MemoryByteStream* input = new AP4_MemoryByteStream(p_block->p_buffer, p_block->i_buffer);
+	AP4_MemoryByteStream* output = new AP4_MemoryByteStream();
+
+	AP4_CencDecryptingProcessor processor = AP4_CencDecryptingProcessor(&keyMap);
+
+	if (AP4_FAILED(processor.Process(*input, *output))) {
+		input->Release();
+		output->Release();
+		return;
+	}
+
+	block_Release(p_block);
+    p_block = block_Alloc(output->GetDataSize());
+    if (p_block == NULL)
+        return;
+	memcpy(p_block->p_buffer, output->GetData(), p_block->i_buffer);
+
+	input->Release();
+	output->Release();
 }
