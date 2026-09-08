@@ -57,14 +57,20 @@ namespace
     }
 }
 
-void loadCustomKeys(std::string keys)
+namespace adaptive
 {
-    customKeys.clear();
-    const std::vector<std::string> keyPairs = splitString(keys, ";");
-    for (std::string keyPair : keyPairs)
+    namespace encryption
     {
-        const std::vector<std::string> key = splitString(keyPair, ":");
-        customKeys.emplace(key.front(), key.back());
+        void loadCustomKeys(std::string keys)
+        {
+            customKeys.clear();
+            const std::vector<std::string> keyPairs = splitString(keys, ";");
+            for (std::string keyPair : keyPairs)
+            {
+                const std::vector<std::string> key = splitString(keyPair, ":");
+                customKeys.emplace(key.front(), key.back());
+            }
+        }
     }
 }
 
