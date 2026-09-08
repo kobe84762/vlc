@@ -65,10 +65,28 @@ bool SegmentChunk::decrypt(block_t **pp_block)
         }
         else if( encryptionSession->getEncryptionMethod() == CommonEncryption::Method::AES_Sample )
         {
-            if(source->getChunkType() == adaptive::http::ChunkType::Init && !encryptionSession->hasKeyId() )
-                encryptionSession->setKeyId(Ap4Tools::getKeyId(p_block->p_buffer, p_block->i_buffer));
+            if(source->getChunkType() == adaptive::http::ChunkType::Init)
+            {
+                if(rep)
+                {
+                    rep->init.clear();
+                    rep->init.resize(p_block->i_buffer);
+                    memcpy(rep->init.data(), p_block->p_buffer, p_block->i_buffer);
+                }
+                if(!encryptionSession->hasKeyId())
+                    encryptionSession->setKeyId(Ap4Tools::getKeyId(p_block->p_buffer, p_block->i_buffer));
+            }
             else if(source->getChunkType() == adaptive::http::ChunkType::Segment)
+            {
+                if(rep)
+                {
+                    if(rep->init.size() == 0)
+                        return false;
+                    p_block = *pp_block = block_TryRealloc(p_block, rep->init.size(), p_block->i_buffer);
+                    memcpy(p_block->p_buffer, rep->init.data(), rep->init.size());
+                }
                 encryptionSession->decrypt(pp_block, b_last);
+            }
         }
     }
 
